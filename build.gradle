@@ -1,0 +1,124 @@
+plugins {
+	id 'maven-publish'
+}
+
+def mainModuleId = property("main_module_id").toString()
+def pluginMavenPackage = property("plugin_maven_package").toString()
+def pluginPackage = property("plugin_package").toString()
+def pluginClass = property("plugin_class").toString()
+def pluginVersion = property("plugin_version").toString()
+def pluginDescription = property("plugin_description").toString()
+def modules = ["core", "stonecutter", "settings"]
+
+tasks.register("buildAll", Copy) {
+	group = "build"
+	into "${project.rootDir}/libs"
+	project.rootProject.subprojects.each { project ->
+		def jarTask = project.tasks.named("jar")
+		if (jarTask.isPresent()) {
+			from(jarTask.get().outputs.files)
+		}
+	}
+}
+
+subprojects {subProject ->
+	subProject.plugins.apply("java")
+	subProject.plugins.apply("java-gradle-plugin")
+	subProject.plugins.apply("maven-publish")
+
+	subProject.group = pluginPackage
+	subProject.version = pluginVersion
+
+	subProject.repositories {
+		mavenLocal()
+		mavenCentral()
+		gradlePluginPortal()
+		maven {
+			name "Fabric"
+			url "https://maven.fabricmc.net/"
+		}
+		maven {
+			name "Kiku Snapshots"
+			url "https://maven.kikugie.dev/snapshots"
+		}
+		maven {
+			name "Kiku Releases"
+			url "https://maven.kikugie.dev/releases"
+		}
+	}
+
+	subProject.dependencies {
+		compileOnly "org.projectlombok:lombok:${property("lombok_version")}"
+		annotationProcessor "org.projectlombok:lombok:${property("lombok_version")}"
+		implementation "dev.kikugie.stonecutter:dev.kikugie.stonecutter.gradle.plugin:${property("stonecutter_version")}"
+		if (subProject.name != "common") {
+			compileOnly project(":module:common")
+		}
+	}
+
+	if (subProject.name != "common") {
+		subProject.tasks.named("jar").configure { jar ->
+			jar.from(project(":module:common").sourceSets.main.output)
+		}
+	}
+
+	subProject.rootProject.tasks.named("buildAll").configure { buildAll ->
+		buildAll.dependsOn(subProject.tasks.named("jar").get())
+	}
+
+	subProject.tasks.named("jar").configure {jar -> {
+		def jarTask = (Jar) jar
+		def moduleName = pluginClass + subProject.name.substring(0, 1).toUpperCase() + subProject.name.substring(1)
+		jarTask.archiveBaseName.set(moduleName)
+		jarTask.from("${subProject.rootProject.rootDir}/LICENSE")
+	}}
+}
+
+modules.forEach {module ->
+	def moduleProject = project(":module:${module}")
+	def moduleName = pluginClass + module.substring(0, 1).toUpperCase() + module.substring(1)
+
+	moduleProject.gradlePlugin.plugins {
+		create(module) {
+			id = "${pluginMavenPackage}.${mainModuleId}-${module}"
+			implementationClass = "${pluginPackage}.${module}.${moduleName}"
+			version = pluginVersion
+			description = "${pluginDescription}"
+		}
+	}
+
+	moduleProject.publishing {
+		repositories {
+			maven {
+				name = 'MossyProjectsReleases'
+				url = uri('https://maven.lopymine.net/releases')
+				credentials(PasswordCredentials)
+				authentication {
+					create('basic', BasicAuthentication)
+				}
+			}
+			maven {
+				name = 'MossyProjectsSnapshots'
+				url = uri('https://maven.lopymine.net/snapshots')
+				credentials(PasswordCredentials)
+				authentication {
+					create('basic', BasicAuthentication)
+				}
+			}
+		}
+	}
+}
+
+tasks.register("publishToReleases") {task ->
+	task.group = "publish"
+	modules.forEach {module ->
+		task.dependsOn(":module:${module}:publishAllPublicationsToMossyProjectsReleasesRepository")
+	}
+}
+
+tasks.register("publishToSnapshots") {task ->
+	task.group = "publish"
+	modules.forEach {module ->
+		task.dependsOn(":module:${module}:publishAllPublicationsToMossyProjectsSnapshotsRepository")
+	}
+}

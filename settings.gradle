@@ -1,0 +1,5 @@
+rootProject.name = plugin_class
+
+List.of("core", "stonecutter", "settings", "common").forEach {
+	include(":module:${it}")
+}
