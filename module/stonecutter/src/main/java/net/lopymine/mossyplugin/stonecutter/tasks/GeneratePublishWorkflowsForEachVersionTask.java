@@ -1,24 +1,27 @@
-package net.lopymine.mossyplugin.core.tasks;
+package net.lopymine.mossyplugin.stonecutter.tasks;
 
 import java.io.File;
 import java.nio.file.Files;
-import lombok.experimental.ExtensionMethod;
-import net.lopymine.mossyplugin.core.MossyPluginCore;
+import java.util.List;
+import lombok.*;
 import org.gradle.api.*;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 
-@ExtensionMethod(MossyPluginCore.class)
+@Setter
+@Getter
 public class GeneratePublishWorkflowsForEachVersionTask extends DefaultTask {
-	
+
+	@Input
+	List<String> multiVersions;
+
 	@TaskAction
 	public void generate() {
 		Project project = this.getProject();
-		File file = project.getRootFile(".github/workflows/");
+		File file = project.file(".github/workflows/");
 		if (!file.exists() && !file.mkdirs()) {
 			return;
 		}
-		String[] multiVersions = project.getMultiVersions();
-		for (String multiVersion : multiVersions) {
+		for (String multiVersion : this.getMultiVersions()) {
 			try {
 				File workflowFile = file.toPath().resolve("publish_%s.yml".formatted(multiVersion)).toFile();
 				if (workflowFile.exists()) {
@@ -47,7 +50,7 @@ public class GeneratePublishWorkflowsForEachVersionTask extends DefaultTask {
 						      - name: make gradle wrapper executable
 						        run: chmod +x ./gradlew
 						      - name: Publish MULTI_VERSION_ID Mod Version
-						        run: ./gradlew chiseledBuildAndCollect+MULTI_VERSION_ID chiseledPublish+MULTI_VERSION_ID
+						        run: ./gradlew buildAndCollect+MULTI_VERSION_ID publish+MULTI_VERSION_ID
 						        env:
 						          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
 						          MODRINTH_API_KEY: ${{ secrets.MODRINTH_API_KEY }}

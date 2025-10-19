@@ -1,19 +1,16 @@
-package net.lopymine.mossyplugin.core.tasks;
+package net.lopymine.mossyplugin.stonecutter.tasks;
 
 import java.io.File;
 import java.nio.file.Files;
-import lombok.experimental.ExtensionMethod;
-import net.lopymine.mossyplugin.core.MossyPluginCore;
 import org.gradle.api.*;
 import org.gradle.api.tasks.TaskAction;
 
-@ExtensionMethod(MossyPluginCore.class)
 public class GeneratePersonalPropertiesTask extends DefaultTask {
 
 	@TaskAction
 	public void generate() {
 		Project project = this.getProject();
-		File file = project.getRootFile("personal/");
+		File file = project.file("personal/");
 		if (!file.exists() && !file.mkdirs()) {
 			return;
 		}

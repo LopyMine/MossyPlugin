@@ -89,6 +89,7 @@ modules.forEach {module ->
 
 	moduleProject.publishing {
 		repositories {
+			mavenLocal()
 			maven {
 				name = 'MossyProjectsReleases'
 				url = uri('https://maven.lopymine.net/releases')
@@ -120,5 +121,12 @@ tasks.register("publishToSnapshots") {task ->
 	task.group = "publish"
 	modules.forEach {module ->
 		task.dependsOn(":module:${module}:publishAllPublicationsToMossyProjectsSnapshotsRepository")
+	}
+}
+
+tasks.register("publishToMaven") {task ->
+	task.group = "publish"
+	modules.forEach {module ->
+		task.dependsOn(":module:${module}:publishAllPublicationsToMavenLocalRepository")
 	}
 }

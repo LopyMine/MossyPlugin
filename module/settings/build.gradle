@@ -1,3 +1,20 @@
 dependencies {
 	implementation "com.google.code.gson:gson:${property("gson_version")}"
 }
+
+tasks.register("replacePluginVersion") {
+	def path = "src/main/java/${rootProject.property("plugin_package").toString().replace(".", "/")}/settings/${rootProject.property("plugin_class")}Settings.java"
+	inputs.file(path)
+	outputs.file(path)
+
+	doLast {
+		def file = file(path)
+		def text = file.text.replaceAll(
+				/(public static final String PLUGIN_VERSION = ").*(";)/,
+				"\$1${rootProject.property("plugin_version")}\$2"
+		)
+		file.text = text
+	}
+}
+
+compileJava.dependsOn("replacePluginVersion")

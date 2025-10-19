@@ -70,10 +70,12 @@ public class DependenciesManager {
 		String yaclVersion = properties.get("yacl");
 		if (yaclVersion != null && !yaclVersion.equals("unknown")) {
 			Set<String> oldMavenVersions = Set.of("1.19.4", "1.20", "1.20.2", "1.20.3");
+			AdditionalDependencyOverride override = overrides.get("yacl");
+			String configurationName = override != null ? override.configurationName() : "modImplementation";
 			if (oldMavenVersions.contains(minecraft)) {
-				dependencies.add("modImplementation", "dev.isxander.yacl:yet-another-config-lib-fabric:%s".formatted(MossyUtils.substringBeforeLast(yaclVersion, "-")));
+				dependencies.add(configurationName, "dev.isxander.yacl:yet-another-config-lib-fabric:%s".formatted(MossyUtils.substringBeforeLast(yaclVersion, "-")));
 			} else {
-				dependencies.add("modImplementation", "dev.isxander:yet-another-config-lib:%s".formatted(yaclVersion));
+				dependencies.add(configurationName, "dev.isxander:yet-another-config-lib:%s".formatted(yaclVersion));
 			}
 		}
 	}

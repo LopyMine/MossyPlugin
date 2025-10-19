@@ -11,10 +11,12 @@ import net.fabricmc.loom.api.LoomGradleExtensionAPI;
 import net.fabricmc.loom.task.RemapJarTask;
 import net.lopymine.mossyplugin.common.*;
 import net.lopymine.mossyplugin.core.manager.*;
-import net.lopymine.mossyplugin.core.tasks.*;
 import net.lopymine.mossyplugin.core.util.MultiVersion;
 import org.gradle.api.*;
+import org.gradle.api.artifacts.dsl.RepositoryHandler;
+import org.gradle.api.artifacts.repositories.ArtifactRepository;
 import org.gradle.api.plugins.*;
+import org.gradle.api.publish.PublishingExtension;
 import org.gradle.api.tasks.*;
 import org.gradle.jvm.tasks.Jar;
 import org.jetbrains.annotations.NotNull;
@@ -39,6 +41,7 @@ public class MossyPluginCore implements Plugin<Project> {
 		plugins.apply("fabric-loom");
 		plugins.apply("me.modmuss50.mod-publish-plugin");
 		plugins.apply("dev.kikugie.fletching-table");
+		plugins.apply("maven-publish");
 
 		//
 
@@ -74,22 +77,29 @@ public class MossyPluginCore implements Plugin<Project> {
 		project.getExtensions().configure(ModPublishExtension.class, (mpe) -> {
 			ModPublishManager.apply(project, plugin, mpe);
 		});
+
+		project.getGradle().addProjectEvaluationListener(new ProjectEvaluationListener() {
+			@Override
+			public void beforeEvaluate(@NotNull Project project) {
+			}
+
+			@Override
+			public void afterEvaluate(@NotNull Project project, @NotNull ProjectState state) {
+				project.getExtensions().configure(PublishingExtension.class, (pe) -> {
+					RepositoryHandler repositories = pe.getRepositories();
+					for (ArtifactRepository repository : repositories) {
+						project.getRootProject().getTasks().register("publish+%s+%s".formatted(project.getName(), repository.getName()), (task) -> {
+							task.setGroup("mossy-publish-" + repository.getName().toLowerCase());
+							task.dependsOn(":%s:publishAllPublicationsTo%sRepository".formatted(project.getName(), repository.getName()));
+						});
+					}
+				});
+				project.getGradle().removeProjectEvaluationListener(this);
+			}
+		});
 	}
 
 	private static void configureTasks(@NotNull Project project, MossyPluginCore plugin) {
-		project.getTasks().register("generatePublishWorkflowsForEachVersion", GeneratePublishWorkflowsForEachVersionTask.class, (task) -> {
-			task.setGroup("mossy");
-		});
-		project.getTasks().register("generatePersonalProperties", GeneratePersonalPropertiesTask.class, (task) -> {
-			task.setGroup("mossy");
-		});
-		project.getTasks().register("regenerateRunConfigurations", Delete.class, (task) -> {
-			task.setGroup("mossy");
-			String version = plugin.getProjectMultiVersion().projectVersion();
-			task.delete(getRootFile(project, ".idea/runConfigurations/Minecraft_Client___%s__%s.xml".formatted(version.replace(".", "_"), version)));
-			task.delete(getRootFile(project, ".idea/runConfigurations/Minecraft_Server___%s__%s.xml".formatted(version.replace(".", "_"), version)));
-			task.finalizedBy("ideaSyncTask");
-		});
 		project.getTasks().register("rebuildLibs", Delete.class, task -> {
 			task.setGroup("build");
 			String modName = MossyUtils.getProperty(project, "data.mod_name").replace(" ", "");

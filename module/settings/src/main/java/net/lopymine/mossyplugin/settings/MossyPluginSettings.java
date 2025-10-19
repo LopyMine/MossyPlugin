@@ -12,6 +12,8 @@ import org.jetbrains.annotations.NotNull;
 @Getter
 public class MossyPluginSettings implements Plugin<Settings> {
 
+	public static final String PLUGIN_VERSION = "1.1.4";
+
 	public static final MossyLogger LOGGER = new MossyLogger("Settings");
 
 	@Override
@@ -19,6 +21,7 @@ public class MossyPluginSettings implements Plugin<Settings> {
 		Properties gradleProperties = getGradleProperties(settings.getRootDir());
 		settings.getRootProject().setName(MossyUtils.getProperty(gradleProperties, "data.mod_name"));
 		LOGGER.setup(settings.getRootProject().getName());
+		LOGGER.log("Running MossyPlugin " + PLUGIN_VERSION);
 
 		List<String> additionalDependencies = getAdditionalDependencies(gradleProperties);
 		if (additionalDependencies.isEmpty()) {
