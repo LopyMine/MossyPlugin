@@ -172,6 +172,9 @@ public class MossyPluginCore implements Plugin<Project> {
 
 		String[] versions = MossyUtils.getProperty(currentProject, "versions_specifications").split(" ");
 		for (String version : versions) {
+			if (!version.contains("[") || !version.contains("]")) {
+				continue;
+			}
 			String[] split = version.substring(0, version.length()-1).split("\\[");
 			String project = split[0];
 			if (Objects.equals(project, currentMCVersion)) {
