@@ -2,4 +2,5 @@ dependencies {
 	implementation "me.modmuss50.mod-publish-plugin:me.modmuss50.mod-publish-plugin.gradle.plugin:${property("mod_publish_plugin_version")}"
 	implementation "dev.kikugie.fletching-table:dev.kikugie.fletching-table.gradle.plugin:${property("fletching_table_version")}"
 	implementation "fabric-loom:fabric-loom.gradle.plugin:${property("fabric_loom_version")}"
+	implementation "net.neoforged.moddev:net.neoforged.moddev.gradle.plugin:${property("neoforge_moddev_version")}"
 }

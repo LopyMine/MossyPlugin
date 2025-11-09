@@ -7,9 +7,9 @@ import java.util.*;
 import java.util.Map.Entry;
 import lombok.Getter;
 import me.modmuss50.mpp.ModPublishExtension;
-import net.fabricmc.loom.api.LoomGradleExtensionAPI;
-import net.fabricmc.loom.task.RemapJarTask;
 import net.lopymine.mossyplugin.common.*;
+import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
+import net.lopymine.mossyplugin.core.loader.*;
 import net.lopymine.mossyplugin.core.manager.*;
 import net.lopymine.mossyplugin.core.util.MultiVersion;
 import org.gradle.api.*;
@@ -34,14 +34,16 @@ public class MossyPluginCore implements Plugin<Project> {
 	public void apply(@NotNull Project project) {
 		LOGGER.setup(project);
 
+		MossyProjectConfigurationData data = MossyProjectConfigurationData.create(project, this);
+
 		//
 
 		PluginContainer plugins = project.getPlugins();
 		plugins.apply("dev.kikugie.stonecutter");
-		plugins.apply("fabric-loom");
 		plugins.apply("me.modmuss50.mod-publish-plugin");
 		plugins.apply("dev.kikugie.fletching-table");
 		plugins.apply("maven-publish");
+		data.loaderManager().applyPlugins(data);
 
 		//
 
@@ -51,31 +53,30 @@ public class MossyPluginCore implements Plugin<Project> {
 
 		//
 
-		MossyPluginCore.configureProject(project, this);
-
-		JavaManager.apply(project,this);
-		J52JManager.apply(project);
-		ProcessResourcesManager.apply(project, this);
-
-		DependenciesManager.apply(project);
-		StonecutterManager.apply(project, this);
+		MossyPluginCore.configureProject(data);
+		JavaManager.apply(data);
+		J52JManager.apply(data);
+		ProcessResourcesManager.apply(data);
+		DependenciesManager.apply(data);
+		StonecutterManager.apply(data);
 
 		//
 
-		MossyPluginCore.configureExtensions(project, this);
-		MossyPluginCore.configureTasks(project, this);
+		MossyPluginCore.configureExtensions(data);
+		MossyPluginCore.configureTasks(data);
 
 		LOGGER.log("Project Version: %s", project.getVersion());
 		LOGGER.log("Java Version: %s", this.javaVersionIndex);
 	}
 
-	private static void configureExtensions(@NotNull Project project, MossyPluginCore plugin) {
-		project.getExtensions().configure(LoomGradleExtensionAPI.class, (loom) -> {
-			LoomManager.apply(project, plugin, loom);
-		});
+	private static void configureExtensions(@NotNull MossyProjectConfigurationData data) {
+		LoaderManager loaderManager = data.loaderManager();
+		Project project = data.project();
+
+		loaderManager.configureExtensions(data);
 
 		project.getExtensions().configure(ModPublishExtension.class, (mpe) -> {
-			ModPublishManager.apply(project, plugin, mpe);
+			ModPublishManager.apply(data, mpe);
 		});
 
 		project.getGradle().addProjectEvaluationListener(new ProjectEvaluationListener() {
@@ -86,10 +87,13 @@ public class MossyPluginCore implements Plugin<Project> {
 			@Override
 			public void afterEvaluate(@NotNull Project project, @NotNull ProjectState state) {
 				project.getExtensions().configure(PublishingExtension.class, (pe) -> {
+					String loader = MossyUtils.substringBefore(project.getName(), "-");
+					String version = MossyUtils.substringSince(project.getName(), "-");
+
 					RepositoryHandler repositories = pe.getRepositories();
 					for (ArtifactRepository repository : repositories) {
-						project.getRootProject().getTasks().register("publish+%s+%s".formatted(project.getName(), repository.getName()), (task) -> {
-							task.setGroup("mossy-publish-" + repository.getName().toLowerCase());
+						project.getRootProject().getTasks().register("publishMaven+%s+%s+%s".formatted(loader, repository.getName(), version), (task) -> {
+							task.setGroup("ac-mossy-publish-maven-%s-%s".formatted(loader, repository.getName().toLowerCase()));
 							task.dependsOn(":%s:publishAllPublicationsTo%sRepository".formatted(project.getName(), repository.getName()));
 						});
 					}
@@ -99,7 +103,10 @@ public class MossyPluginCore implements Plugin<Project> {
 		});
 	}
 
-	private static void configureTasks(@NotNull Project project, MossyPluginCore plugin) {
+	private static void configureTasks(@NotNull MossyProjectConfigurationData data) {
+		Project project = data.project();
+		LoaderManager loaderManager = data.loaderManager();
+
 		project.getTasks().register("rebuildLibs", Delete.class, task -> {
 			task.setGroup("build");
 			String modName = MossyUtils.getProperty(project, "data.mod_name").replace(" ", "");
@@ -118,7 +125,7 @@ public class MossyPluginCore implements Plugin<Project> {
 		project.getTasks().register("buildAndCollect", Copy.class, task -> {
 			task.setGroup("build");
 			task.dependsOn("rebuildLibs", "build");
-			task.from(((RemapJarTask) project.getTasks().getByName("remapJar")).getArchiveFile().get());
+			task.from(((Jar) project.getTasks().getByName(loaderManager.getJarTaskName())).getArchiveFile().get());
 			task.into(getRootFile(project, "libs/"));
 		});
 		for (String publishTask : List.of("publishModrinth", "publishCurseforge")) {
@@ -128,15 +135,18 @@ public class MossyPluginCore implements Plugin<Project> {
 						Thread.sleep(1000L);
 					} catch (Exception e) {
 						MossyPluginCore.LOGGER.log("Failed to wait before publishing!");
-						e.printStackTrace();
+						e.printStackTrace(System.out);
 					}
 				});
 			});
 		}
 	}
 
-	private static void configureProject(@NotNull Project project, MossyPluginCore plugin) {
-		String projectVersion = plugin.getMossyProjectVersion(project);
+	private static void configureProject(@NotNull MossyProjectConfigurationData data) {
+		Project project = data.project();
+		MossyPluginCore plugin = data.plugin();
+
+		String projectVersion = plugin.getMossyProjectVersion(data);
 		String mavenGroup = MossyUtils.getProperty(project, "data.mod_maven_group");
 		project.setVersion(projectVersion);
 		project.setGroup(mavenGroup);
@@ -169,8 +179,9 @@ public class MossyPluginCore implements Plugin<Project> {
 
 	public static MultiVersion getProjectMultiVersion(@NotNull Project currentProject) {
 		String currentMCVersion = getCurrentMCVersion(currentProject);
+		String currentLoader = getCurrentLoader(currentProject);
 
-		String[] versions = MossyUtils.getProperty(currentProject, "versions_specifications").split(" ");
+		String[] versions = MossyUtils.getProperty(currentProject, "%s.versions_specifications".formatted(currentLoader)).split(" ");
 		for (String version : versions) {
 			if (!version.contains("[") || !version.contains("]")) {
 				continue;
@@ -248,25 +259,24 @@ public class MossyPluginCore implements Plugin<Project> {
 	}
 
 	public static String getCurrentMCVersion(@NotNull Project project) {
-		return getStonecutter(project).getCurrent().getProject();
+		return getStonecutter(project).getCurrent().getVersion();
+	}
+
+	public static String getCurrentLoader(@NotNull Project project) {
+		return MossyUtils.substringBefore(getStonecutter(project).getCurrent().getProject(), "-");
 	}
 
 	public static @NotNull StonecutterBuildExtension getStonecutter(@NotNull Project project) {
 		return (StonecutterBuildExtension) project.getExtensions().getByName("stonecutter");
 	}
 
-	public static String[] getMultiVersions(@NotNull Project project) {
-		return MossyUtils.getProperty(project, "multi_versions").split(" ");
-	}
-
 	public static String getProperty(Project project, String id) {
 		return MossyUtils.getProperty(project, id);
 	}
 
-	public String getMossyProjectVersion(Project project) {
-		String modVersion = MossyUtils.getProperty(project, "data.mod_version");
-		MultiVersion multiVersion = this.getProjectMultiVersion();
-		return "%s+%s".formatted(modVersion, multiVersion.projectVersion());
+	public String getMossyProjectVersion(MossyProjectConfigurationData data) {
+		String modVersion = MossyUtils.getProperty(data.project(), "data.mod_version");
+		return "%s+%s+%s".formatted(modVersion, data.minecraftVersion(), data.loaderName());
 	}
 
 	public static File getRootFile(@NotNull Project project, String path) {

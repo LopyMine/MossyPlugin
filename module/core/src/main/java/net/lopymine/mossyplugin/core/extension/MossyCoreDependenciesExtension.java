@@ -20,6 +20,12 @@ public class MossyCoreDependenciesExtension {
 	String fabricLoader;
 
 	@Input
+	String neoForge;
+
+	@Input
+	String parchment;
+
+	@Input
 	String lombok;
 
 	@Nested

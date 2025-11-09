@@ -1,5 +1,6 @@
 dependencies {
 	implementation "com.google.code.gson:gson:${property("gson_version")}"
+	implementation "org.gradle.toolchains.foojay-resolver-convention:org.gradle.toolchains.foojay-resolver-convention.gradle.plugin:${property("foojay_resolver_convention_version")}"
 }
 
 tasks.register("replacePluginVersion") {

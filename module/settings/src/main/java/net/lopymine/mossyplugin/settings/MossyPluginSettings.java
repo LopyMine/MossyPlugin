@@ -4,7 +4,9 @@ import java.io.*;
 import java.util.*;
 import lombok.Getter;
 import net.lopymine.mossyplugin.common.*;
+import net.lopymine.mossyplugin.settings.loader.LoaderManager;
 import net.lopymine.mossyplugin.settings.manager.*;
+import net.lopymine.mossyplugin.settings.project.MossyProject;
 import org.gradle.api.Plugin;
 import org.gradle.api.initialization.Settings;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 @Getter
 public class MossyPluginSettings implements Plugin<Settings> {
 
-	public static final String PLUGIN_VERSION = "1.1.5";
+	public static final String PLUGIN_VERSION = "1.1.50";
 
 	public static final MossyLogger LOGGER = new MossyLogger("Settings");
 
@@ -23,6 +25,8 @@ public class MossyPluginSettings implements Plugin<Settings> {
 		LOGGER.setup(settings.getRootProject().getName());
 		LOGGER.log("Running MossyPlugin " + PLUGIN_VERSION);
 
+		settings.getPlugins().apply("org.gradle.toolchains.foojay-resolver-convention");
+
 		List<String> additionalDependencies = getAdditionalDependencies(gradleProperties);
 		if (additionalDependencies.isEmpty()) {
 			LOGGER.log("No additional dependencies!");
@@ -30,13 +34,18 @@ public class MossyPluginSettings implements Plugin<Settings> {
 			LOGGER.log("Found additional dependencies: [%s]".formatted(String.join(", ", additionalDependencies)));
 		}
 
-		List<String> multiVersions = getMultiVersions(gradleProperties);
+		List<String> loaders = getLoaders(gradleProperties);
+		Map<String, List<String>> loadersAndVersions = getLoadersAndVersions(gradleProperties, loaders);
 
-		LOGGER.log("Found MC versions: [%s]".formatted(String.join(", ", multiVersions)));
+		loadersAndVersions.forEach((loader, versions) -> {
+			LOGGER.logModule(loader, "Found MC versions: [%s]".formatted(String.join(", ", versions)));
+		});
 
-		StonecutterManager.apply(settings, multiVersions);
-		AccessWidenerManager.apply(settings, multiVersions);
-		VersionedGradlePropertiesManager.apply(settings, gradleProperties, multiVersions, additionalDependencies);
+		StonecutterManager.apply(settings, loadersAndVersions);
+		List<MossyProject> projects = getMossyProjects(loadersAndVersions);
+
+		AccessWidenerManager.apply(settings, projects);
+		VersionedGradlePropertiesManager.apply(settings, gradleProperties, projects, additionalDependencies);
 	}
 
 	public static List<String> getAdditionalDependencies(Properties properties) {
@@ -54,8 +63,30 @@ public class MossyPluginSettings implements Plugin<Settings> {
 		return additionalDepends;
 	}
 
-	public static List<String> getMultiVersions(Properties gradleProperties) {
-		return Arrays.stream(MossyUtils.getProperty(gradleProperties, "multi_versions").split(" ")).toList();
+	public static Map<String, List<String>> getLoadersAndVersions(Properties gradleProperties, List<String> loaders) {
+		HashMap<String, List<String>> map = new HashMap<>();
+		for (String loader : loaders) {
+			List<String> versions = Arrays.stream(MossyUtils.getProperty(gradleProperties, "%s.multi_versions".formatted(loader)).split(" ")).toList();
+			map.put(loader, versions);
+		}
+		return map;
+	}
+
+	public static List<MossyProject> getMossyProjects(Map<String, List<String>> loaderAndVersions) {
+		List<MossyProject> projects = new ArrayList<>();
+
+		loaderAndVersions.forEach((loader, versions) -> {
+			LoaderManager loaderManager = LoaderManager.of(loader);
+			for (String version : versions) {
+				projects.add(new MossyProject("%s-%s".formatted(loader, version), loader, version, loaderManager));
+			}
+		});
+
+		return projects;
+	}
+
+	public static List<String> getLoaders(Properties gradleProperties) {
+		return Arrays.stream(MossyUtils.getProperty(gradleProperties, "mod_loaders").split(" ")).toList();
 	}
 
 	public static @NotNull Properties getGradleProperties(File project) {

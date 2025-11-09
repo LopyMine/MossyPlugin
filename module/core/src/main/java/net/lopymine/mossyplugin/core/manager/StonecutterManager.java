@@ -1,16 +1,21 @@
 package net.lopymine.mossyplugin.core.manager;
 
 import dev.kikugie.stonecutter.build.StonecutterBuildExtension;
-import java.util.Map;
+import java.util.*;
 import lombok.experimental.ExtensionMethod;
+import net.lopymine.mossyplugin.common.MossyUtils;
 import net.lopymine.mossyplugin.core.MossyPluginCore;
+import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import org.gradle.api.Project;
 import org.jetbrains.annotations.NotNull;
 
 @ExtensionMethod(MossyPluginCore.class)
 public class StonecutterManager {
 
-	public static void apply(@NotNull Project project, MossyPluginCore plugin) {
+	public static void apply(@NotNull MossyProjectConfigurationData data) {
+		Project project = data.project();
+		MossyPluginCore plugin = data.plugin();
+
 		StonecutterBuildExtension stonecutter = project.getStonecutter();
 
 		String mcVersion = plugin.getProjectMultiVersion().projectVersion();
@@ -29,6 +34,10 @@ public class StonecutterManager {
 
 		dependencies.forEach((modId, version) -> {
 			stonecutter.getConstants().put(modId, !version.equals("unknown"));
+		});
+
+		Arrays.stream(project.getProperty("mod_loaders").split(" ")).forEach((loader) -> {
+			stonecutter.getConstants().put(loader, project.getName().startsWith(loader));
 		});
 	}
 

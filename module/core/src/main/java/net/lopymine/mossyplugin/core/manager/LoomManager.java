@@ -7,6 +7,7 @@ import lombok.experimental.ExtensionMethod;
 import net.fabricmc.loom.api.LoomGradleExtensionAPI;
 import net.fabricmc.loom.configuration.ide.RunConfigSettings;
 import net.lopymine.mossyplugin.core.MossyPluginCore;
+import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import org.gradle.api.Project;
 import org.jetbrains.annotations.*;
 
@@ -16,10 +17,11 @@ public class LoomManager {
 	private static final Pattern PLAYER_NICKNAME_PATTERN = Pattern.compile("[a-zA-Z0-9_]{2,16}$");
 
 	@SuppressWarnings("UnstableApiUsage")
-	public static void apply(@NotNull Project project, MossyPluginCore plugin, LoomGradleExtensionAPI loom) {
+	public static void apply(@NotNull MossyProjectConfigurationData data, LoomGradleExtensionAPI loom) {
+		Project project = data.project();
+
 		String modId = project.getProperty("data.mod_id");
-		String currentVersion = plugin.getProjectMultiVersion().projectVersion();
-		File file = project.getRootFile("src/main/resources/aws/%s.accesswidener".formatted(currentVersion));
+		File file = project.getRootFile("src/main/resources/aws/%s.accesswidener".formatted(project.getName()));
 
 		// Mixins and AWs
 
