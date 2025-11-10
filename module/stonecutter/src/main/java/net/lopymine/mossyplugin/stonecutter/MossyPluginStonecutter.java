@@ -84,21 +84,21 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 
 		tasks.register("buildAndCollect+All", (task) -> {
 			for (String loader : loaderAndProjects.keySet()) {
-				task.dependsOn("buildAndCollect+All+%s".formatted(loader));
+				task.dependsOn("buildAndCollect+%s+All".formatted(loader));
 			}
 			task.setGroup("a-mossy-main");
 		});
 
 		tasks.register("publish+Specified", (task) -> {
 			for (String loader : loaderAndProjects.keySet()) {
-				task.dependsOn("publish+Specified+%s".formatted(loader));
+				task.dependsOn("publish+%s+Specified".formatted(loader));
 			}
 			task.setGroup("a-mossy-main");
 		});
 
 		tasks.register("publish+All", (task) -> {
 			for (String loader : loaderAndProjects.keySet()) {
-				task.dependsOn("publish+All+%s".formatted(loader));
+				task.dependsOn("publish+%s+All".formatted(loader));
 			}
 			task.setGroup("a-mossy-main");
 		});
