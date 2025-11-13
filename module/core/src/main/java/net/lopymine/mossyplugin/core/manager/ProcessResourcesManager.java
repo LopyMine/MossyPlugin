@@ -49,9 +49,16 @@ public class ProcessResourcesManager {
 		properties.put("fabric_api_id", project.getStonecutter().compare("1.19.1", mcVersion) >= 0 ? "fabric" : "fabric-api");
 		properties.put("mod_version", project.getVersion().toString());
 
+		List<String> mixinConfigs = new ArrayList<>();
+		mixinConfigs.add("%s.mixins.json".formatted(modId));
+		for (String config : project.getProperty("data.mixin_configs").split(" ")) {
+			mixinConfigs.add("%s-%s.mixins.json".formatted(modId, config));
+		}
+		properties.put("fabric_trick_mixin_configs", String.join("\",\"", mixinConfigs));
+
 		properties.forEach(inputs::property);
 
-		List<String> patterns = new ArrayList<>(List.of("*.json5", "META-INF/*.toml", "*.json", "assets/%s/lang/*.json".formatted(modId)));
+		List<String> patterns = new ArrayList<>(List.of("*.json5", "META-INF/*.toml", "pack.mcmeta", "*.json", "assets/%s/lang/*.json".formatted(modId)));
 		List<String> expandFiles = extension.getExpandFiles();
 		if (expandFiles != null) {
 			patterns.addAll(expandFiles);

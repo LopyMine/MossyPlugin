@@ -4,18 +4,18 @@ import java.io.FileWriter;
 import java.util.List;
 import net.lopymine.mossyplugin.settings.api.*;
 
-public class NeoForgeLoaderManager implements LoaderManager {
+public class ForgeLoaderManager implements LoaderManager {
 
-	private static final NeoForgeLoaderManager INSTANCE = new NeoForgeLoaderManager();
+	private static final ForgeLoaderManager INSTANCE = new ForgeLoaderManager();
 
-	public static NeoForgeLoaderManager getInstance() {
+	public static ForgeLoaderManager getInstance() {
 		return INSTANCE;
 	}
 
 	@Override
 	public void fillGPWithProperties(StringBuilder builder, String minecraft) {
-		builder.append("# NeoForge Properties, check https://neoforged.net/\n");
-		for (String id : List.of("neoforge", "parchment")) {
+		builder.append("# Forge Properties, check https://files.minecraftforge.net/net/minecraftforge/forge/index_%s.html\n".formatted(minecraft));
+		for (String id : List.of("forge", "parchment")) {
 			builder.append("build.%s=%s\n".formatted(id, this.getGPUpdatedProperty(id, minecraft)));
 		}
 	}
@@ -23,7 +23,7 @@ public class NeoForgeLoaderManager implements LoaderManager {
 	@Override
 	public String getGPUpdatedProperty(String id, String minecraft) {
 		return switch (id) {
-			case "neoforge" -> NeoForgeDependenciesAPI.getNeoForgeVersion(minecraft);
+			case "forge" -> ForgeDependenciesAPI.getForgeVersion(minecraft);
 			case "parchment" -> ForgeCommonDependenciesAPI.getParchmentVersion(minecraft);
 			default -> "unknown";
 		};

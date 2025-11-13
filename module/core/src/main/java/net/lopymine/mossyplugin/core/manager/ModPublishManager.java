@@ -20,18 +20,19 @@ public class ModPublishManager {
 
 	public static void apply(@NotNull MossyProjectConfigurationData data, ModPublishExtension mpe) {
 		MossyPluginCore plugin = data.plugin();
+		String loaderName = data.loaderName();
 		LoaderManager loaderManager = data.loaderManager();
 		Project project = data.project();
 
 		MultiVersion projectMultiVersion = plugin.getProjectMultiVersion();
-		String name = "[%s/%s] %s v%s".formatted(data.loaderName(), projectMultiVersion.toVersionRange(), project.getProperty("data.mod_name"), project.getProperty("data.mod_version"));
+		String name = "[%s/%s] %s v%s".formatted(loaderName, projectMultiVersion.toVersionRange(), project.getProperty("data.mod_name"), project.getProperty("data.mod_version"));
 
 		String modrinthId = project.getProperty("modrinth_id");
 		String curseForgeId = project.getProperty("curseforge_id");
-		String[] dependsEmbeds = project.getProperty("depends_embeds").split(" ");
-		String[] dependsRequires = project.getProperty("depends_requires").split(" ");
-		String[] dependsOptional = project.getProperty("depends_optional").split(" ");
-		String[] dependsIncompatible = project.getProperty("depends_incompatible").split(" ");
+		String[] dependsEmbeds = project.getProperty("%s.depends_embeds".formatted(loaderName)).split(" ");
+		String[] dependsRequires = project.getProperty("%s.depends_requires".formatted(loaderName)).split(" ");
+		String[] dependsOptional = project.getProperty("%s.depends_optional".formatted(loaderName)).split(" ");
+		String[] dependsIncompatible = project.getProperty("%s.depends_incompatible".formatted(loaderName)).split(" ");
 		String versionType = project.getProperty("version_type");
 		int maxJavaVersion = Integer.parseInt(project.getProperty("max_java_version"));
 		Boolean isForClient = Boolean.parseBoolean(project.getProperty("is_for_client"));
@@ -47,7 +48,7 @@ public class ModPublishManager {
 		mpe.getFile().set(getModFile(project, loaderManager));
 		mpe.getChangelog().set(getChangelog(project));
 		mpe.getType().set(getType(versionType));
-		mpe.getModLoaders().set(List.of(data.loaderName()));
+		mpe.getModLoaders().set(List.of(loaderName));
 		mpe.getDryRun().set(cannotUpload);
 
 		if (!curseForgeId.equals("none")) {

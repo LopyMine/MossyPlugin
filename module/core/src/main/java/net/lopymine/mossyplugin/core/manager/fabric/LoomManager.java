@@ -1,4 +1,4 @@
-package net.lopymine.mossyplugin.core.manager;
+package net.lopymine.mossyplugin.core.manager.fabric;
 
 import java.io.File;
 import java.util.*;

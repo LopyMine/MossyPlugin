@@ -1,10 +1,9 @@
 package net.lopymine.mossyplugin.core.loader;
 
 import net.fabricmc.loom.api.LoomGradleExtensionAPI;
-import net.lopymine.mossyplugin.core.MossyPluginCore;
 import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import net.lopymine.mossyplugin.core.extension.MossyCoreDependenciesExtension;
-import net.lopymine.mossyplugin.core.manager.LoomManager;
+import net.lopymine.mossyplugin.core.manager.fabric.LoomManager;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.file.FileCopyDetails;
@@ -70,8 +69,7 @@ public class FabricLoaderManager implements LoaderManager {
 
 	@Override
 	public boolean excludeUselessFiles(FileCopyDetails details) {
-		System.out.println(details.getPath());
-		if (details.getPath().startsWith("META-INF")) {
+		if (details.getName().contains("mods.toml")) {
 			details.exclude();
 			return true;
 		}

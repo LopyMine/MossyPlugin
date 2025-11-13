@@ -8,7 +8,9 @@ import org.jetbrains.annotations.NotNull;
 public interface LoaderManager {
 
 	static LoaderManager of(String loader) {
-		if (loader.contains("forge")) {
+		if (loader.equals("forge")) {
+			return ForgeLoaderManager.getInstance();
+		} else if (loader.contains("neoforge")) {
 			return NeoForgeLoaderManager.getInstance();
 		} else if (loader.contains("fabric")) {
 			return FabricLoaderManager.getInstance();

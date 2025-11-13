@@ -23,6 +23,9 @@ public class MossyCoreDependenciesExtension {
 	String neoForge;
 
 	@Input
+	String forge;
+
+	@Input
 	String parchment;
 
 	@Input

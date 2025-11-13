@@ -1,8 +1,10 @@
 package net.lopymine.mossyplugin.core.loader;
 
+import java.util.List;
 import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import net.lopymine.mossyplugin.core.extension.MossyCoreDependenciesExtension;
-import net.lopymine.mossyplugin.core.manager.*;
+import net.lopymine.mossyplugin.core.manager.neoforge.NeoForgeManager;
+import net.neoforged.moddevgradle.dsl.NeoForgeExtension;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCopyDetails;
 import org.gradle.api.plugins.PluginContainer;
@@ -24,8 +26,10 @@ public class NeoForgeLoaderManager implements LoaderManager {
 	}
 
 	@Override
-	public void applyDependencies(@NotNull MossyProjectConfigurationData data, MossyCoreDependenciesExtension extension) {
-		NeoForgeManager.apply(data, extension);
+	public void applyDependencies(@NotNull MossyProjectConfigurationData data, MossyCoreDependenciesExtension dependencies) {
+		NeoForgeExtension extension = data.project().getExtensions().getByType(NeoForgeExtension.class);
+		extension.setVersion(dependencies.getNeoForge());
+		NeoForgeManager.apply(data, extension, dependencies);
 	}
 
 	@Override
@@ -54,10 +58,13 @@ public class NeoForgeLoaderManager implements LoaderManager {
 
 	@Override
 	public boolean excludeUselessFiles(FileCopyDetails details) {
-		if (details.getName().equals("fabric.mod.json")) {
-			details.exclude();
-			return true;
+		boolean excluded = false;
+		for (String file : List.of("fabric.mod.json", "mods.toml")) {
+			if (details.getName().equals(file)) {
+				details.exclude();
+				excluded = true;
+			}
 		}
-		return false;
+		return excluded;
 	}
 }

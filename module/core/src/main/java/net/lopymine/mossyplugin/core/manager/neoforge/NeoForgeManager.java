@@ -1,4 +1,4 @@
-package net.lopymine.mossyplugin.core.manager;
+package net.lopymine.mossyplugin.core.manager.neoforge;
 
 import java.nio.file.Path;
 import lombok.experimental.ExtensionMethod;
@@ -13,19 +13,17 @@ import org.jetbrains.annotations.NotNull;
 @ExtensionMethod(MossyPluginCore.class)
 public class NeoForgeManager {
 
-	public static void apply(@NotNull MossyProjectConfigurationData data, MossyCoreDependenciesExtension extension) {
+	public static void apply(@NotNull MossyProjectConfigurationData data, ModDevExtension extension, MossyCoreDependenciesExtension dependencies) {
 		Project project = data.project();
-		NeoForgeExtension neoForge = project.getExtensions().getByType(NeoForgeExtension.class);
 
-		neoForge.setVersion(extension.getNeoForge());
-		Parchment parchment = neoForge.getParchment();
-		parchment.getMappingsVersion().set(extension.getParchment());
-		parchment.getMinecraftVersion().set(extension.getMinecraft());
+		Parchment parchment = extension.getParchment();
+		parchment.getMappingsVersion().set(dependencies.getParchment());
+		parchment.getMinecraftVersion().set(dependencies.getMinecraft());
 
-		neoForge.getValidateAccessTransformers().set(true);
-		neoForge.getAccessTransformers().from("../../src/main/resources/aws/neoforge-%s.cfg".formatted(data.minecraftVersion()));
+		extension.getValidateAccessTransformers().set(true);
+		extension.getAccessTransformers().from("../../src/main/resources/aws/%s-%s.cfg".formatted(data.loaderName(), data.minecraftVersion()));
 
-		neoForge.runs((container) -> {
+		extension.runs((container) -> {
 			Path runs = project.getRootProject().getProjectDir().toPath().resolve("runs");
 
 			RunModel client = container.create("client");
@@ -38,7 +36,7 @@ public class NeoForgeManager {
 			server.getGameDirectory().set(runs.resolve("server").toFile());
 		});
 
-		neoForge.mods((container) -> {
+		extension.mods((container) -> {
 			NamedDomainObjectProvider<ModModel> provider = container.register(project.getProperty("data.mod_id"));
 			provider.configure((model) -> {
 				JavaPluginExtension javaPlugin = project.getExtensions().getByType(JavaPluginExtension.class);

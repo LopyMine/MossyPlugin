@@ -26,7 +26,7 @@ public class JavaManager {
 		}
 
 		JavaPluginExtension javaExtension = project.getExtensions().getByType(JavaPluginExtension.class);
-		//javaExtension.getToolchain().getLanguageVersion().set(JavaLanguageVersion.of(javaVersion.getMajorVersion()));
+		javaExtension.getToolchain().getLanguageVersion().set(JavaLanguageVersion.of(javaVersion.getMajorVersion()));
 		javaExtension.setSourceCompatibility(javaVersion);
 		javaExtension.setTargetCompatibility(javaVersion);
 	}

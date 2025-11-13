@@ -75,31 +75,23 @@ public class MossyPluginCore implements Plugin<Project> {
 
 		loaderManager.configureExtensions(data);
 
-		project.getExtensions().configure(ModPublishExtension.class, (mpe) -> {
-			ModPublishManager.apply(data, mpe);
-		});
+		project.afterEvaluate((p) -> {
+			project.getExtensions().configure(ModPublishExtension.class, (mpe) -> {
+				ModPublishManager.apply(data, mpe);
+			});
 
-		project.getGradle().addProjectEvaluationListener(new ProjectEvaluationListener() {
-			@Override
-			public void beforeEvaluate(@NotNull Project project) {
-			}
+			project.getExtensions().configure(PublishingExtension.class, (pe) -> {
+				String loader = MossyUtils.substringBefore(project.getName(), "-");
+				String version = MossyUtils.substringSince(project.getName(), "-");
 
-			@Override
-			public void afterEvaluate(@NotNull Project project, @NotNull ProjectState state) {
-				project.getExtensions().configure(PublishingExtension.class, (pe) -> {
-					String loader = MossyUtils.substringBefore(project.getName(), "-");
-					String version = MossyUtils.substringSince(project.getName(), "-");
-
-					RepositoryHandler repositories = pe.getRepositories();
-					for (ArtifactRepository repository : repositories) {
-						project.getRootProject().getTasks().register("publishMaven+%s+%s+%s".formatted(loader, repository.getName(), version), (task) -> {
-							task.setGroup("ac-mossy-publish-maven-%s-%s".formatted(loader, repository.getName().toLowerCase()));
-							task.dependsOn(":%s:publishAllPublicationsTo%sRepository".formatted(project.getName(), repository.getName()));
-						});
-					}
-				});
-				project.getGradle().removeProjectEvaluationListener(this);
-			}
+				RepositoryHandler repositories = pe.getRepositories();
+				for (ArtifactRepository repository : repositories) {
+					project.getRootProject().getTasks().register("publishMaven+%s+%s+%s".formatted(loader, repository.getName(), version), (task) -> {
+						task.setGroup("ac-mossy-publish-maven-%s-%s".formatted(loader, repository.getName().toLowerCase()));
+						task.dependsOn(":%s:publishAllPublicationsTo%sRepository".formatted(project.getName(), repository.getName()));
+					});
+				}
+			});
 		});
 	}
 
@@ -122,24 +114,26 @@ public class MossyPluginCore implements Plugin<Project> {
 		project.getTasks().named("build", task -> {
 			task.mustRunAfter("rebuildLibs");
 		});
-		project.getTasks().register("buildAndCollect", Copy.class, task -> {
-			task.setGroup("build");
-			task.dependsOn("rebuildLibs", "build");
-			task.from(((Jar) project.getTasks().getByName(loaderManager.getJarTaskName())).getArchiveFile().get());
-			task.into(getRootFile(project, "libs/"));
-		});
-		for (String publishTask : List.of("publishModrinth", "publishCurseforge")) {
-			project.getTasks().named(publishTask).configure((task) -> {
-				task.doLast((t) -> {
-					try {
-						Thread.sleep(1000L);
-					} catch (Exception e) {
-						MossyPluginCore.LOGGER.log("Failed to wait before publishing!");
-						e.printStackTrace(System.out);
-					}
-				});
+		project.afterEvaluate((p) -> {
+			project.getTasks().register("buildAndCollect", Copy.class, task -> {
+				task.setGroup("build");
+				task.dependsOn("rebuildLibs", "build");
+				task.from(((Jar) project.getTasks().getByName(loaderManager.getJarTaskName())).getArchiveFile().get());
+				task.into(getRootFile(project, "libs/"));
 			});
-		}
+			for (String publishTask : List.of("publishModrinth", "publishCurseforge")) {
+				project.getTasks().named(publishTask).configure((task) -> {
+					task.doLast((t) -> {
+						try {
+							Thread.sleep(1000L);
+						} catch (Exception e) {
+							MossyPluginCore.LOGGER.log("Failed to wait before publishing!");
+							e.printStackTrace(System.out);
+						}
+					});
+				});
+			}
+		});
 	}
 
 	private static void configureProject(@NotNull MossyProjectConfigurationData data) {

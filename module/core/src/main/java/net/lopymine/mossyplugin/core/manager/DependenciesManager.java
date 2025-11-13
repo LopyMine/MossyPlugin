@@ -9,9 +9,10 @@ import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import net.lopymine.mossyplugin.core.extension.*;
 import net.lopymine.mossyplugin.core.extension.MossyCoreAdditionalDependencies.AdditionalDependencyOverride;
 import net.lopymine.mossyplugin.core.loader.LoaderManager;
+import net.neoforged.moddevgradle.legacyforge.dsl.ObfuscationExtension;
 import org.gradle.api.*;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
-import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
+import org.gradle.api.artifacts.repositories.*;
 import org.jetbrains.annotations.NotNull;
 
 @ExtensionMethod(MossyPluginCore.class)
@@ -77,6 +78,8 @@ public class DependenciesManager {
 
 	private static void addRepositories(Project project) {
 		project.getRepositories().mavenCentral();
+		addRepository(project, "Forge", "https://maven.minecraftforge.net");
+		addRepository(project, "Minecraft libraries", "https://libraries.minecraft.net");
 		addRepository(project, "Quilt", "https://maven.quiltmc.org/repository/release/");
 		addRepository(project, "Sonatype", "https://oss.sonatype.org/content/repositories/snapshots/");
 		addRepository(project, "Terraformers", "https://maven.terraformersmc.com/");
@@ -87,7 +90,24 @@ public class DependenciesManager {
 				descriptor.includeGroup("maven.modrinth");
 			});
 		});
-
+		addRepository(project, "Sponge", "https://repo.spongepowered.org/repository/maven-public", (repository) -> {
+			project.getRepositories().exclusiveContent((content) -> {
+				content.forRepositories(repository);
+				@SuppressWarnings("all")
+				ExclusiveContentRepository filter = content.filter((descriptor) -> {
+					descriptor.includeGroupAndSubgroups("org.spongepowered");
+				});
+			});
+		});
+		addRepository(project, "YACL Kotlin For Forge", "https://thedarkcolour.github.io/KotlinForForge/", (repository) -> {
+			project.getRepositories().exclusiveContent((content) -> {
+				content.forRepositories(repository);
+				@SuppressWarnings("all")
+				ExclusiveContentRepository filter = content.filter((descriptor) -> {
+					descriptor.includeGroup("thedarkcolour");
+				});
+			});
+		});
 	}
 
 	private static void addRepository(Project project, String name, String url) {
