@@ -1,7 +1,9 @@
 package net.lopymine.mossyplugin.core.manager.neoforge;
 
 import java.nio.file.Path;
+import java.util.*;
 import lombok.experimental.ExtensionMethod;
+import net.lopymine.mossyplugin.common.MossyUtils;
 import net.lopymine.mossyplugin.core.MossyPluginCore;
 import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import net.lopymine.mossyplugin.core.extension.MossyCoreDependenciesExtension;
@@ -16,6 +18,13 @@ public class NeoForgeManager {
 	public static void apply(@NotNull MossyProjectConfigurationData data, ModDevExtension extension, MossyCoreDependenciesExtension dependencies) {
 		Project project = data.project();
 
+		Properties personalProperties = project.getPersonalProperties();
+
+		String playerNickname = MossyUtils.getPlayerNickname(personalProperties);
+		UUID playerUuid = MossyUtils.getPlayerUuid(personalProperties);
+		Object quickPlayWorld = personalProperties.get("quick_play_world");
+		//Object pathToSpongeMixin = personalProperties.get("absolute_path_to_sponge_mixin");
+
 		Parchment parchment = extension.getParchment();
 		parchment.getMappingsVersion().set(dependencies.getParchment());
 		parchment.getMinecraftVersion().set(dependencies.getMinecraft());
@@ -29,6 +38,10 @@ public class NeoForgeManager {
 			RunModel client = container.create("client");
 			client.client();
 			client.getGameDirectory().set(runs.resolve("client").toFile());
+			addProgramArgument(client, "--username ", playerNickname);
+			addProgramArgument(client, "--uuid ", playerUuid);
+			addProgramArgument(client, "--quickPlaySingleplayer ", quickPlayWorld);
+			//addVMArgument(client, "-javaagent:", pathToSpongeMixin);
 
 			RunModel server = container.create("server");
 			server.server();
@@ -43,6 +56,20 @@ public class NeoForgeManager {
 				model.sourceSet(javaPlugin.getSourceSets().getByName("main"));
 			});
 		});
+	}
+
+	private static void addProgramArgument(RunModel client, String key, Object argument) {
+		if (argument == null || argument.toString().equals("none")) {
+			return;
+		}
+		client.programArgument(key + argument);
+	}
+
+	private static void addVMArgument(RunModel client, String key, Object argument) {
+		if (argument == null || argument.toString().equals("none")) {
+			return;
+		}
+		client.jvmArgument(key + argument);
 	}
 
 }

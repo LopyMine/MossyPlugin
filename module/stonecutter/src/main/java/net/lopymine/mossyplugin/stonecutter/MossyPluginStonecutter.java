@@ -31,12 +31,14 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 		}
 
 		loaderAndProjects.forEach((loader, projects) -> {
-			for (StonecutterProject version : projects) {
+			//
+
+			projects.forEach((version) -> {
 				tasks.register("buildAndCollect+%s+%s".formatted(loader, version.getVersion()), (task) -> {
 					task.dependsOn(":%s:buildAndCollect".formatted(version.getProject()));
 					task.setGroup("ab-mossy-build-%s".formatted(loader));
 				});
-			}
+			});
 
 			tasks.register("buildAndCollect+%s+All".formatted(loader), (task) -> {
 				projects.forEach((version) -> {
@@ -56,16 +58,20 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 				task.setGroup("ab-mossy-build-%s".formatted(loader));
 			});
 
-			for (StonecutterProject version : projects) {
+			//
+
+			List<String> publishTasks = List.of("publishModrinth", "publishCurseforge");
+
+			projects.forEach((version) -> {
 				tasks.register("publish+%s+%s".formatted(loader, version.getVersion()), (task) -> {
 					task.dependsOn(":%s:publishMods".formatted(version.getProject()));
-					task.setGroup("ab-mossy-publish-%s".formatted(loader));
+					task.setGroup("ac-mossy-release-%s".formatted(loader));
 				});
-			}
+			});
 
 			tasks.register("publish+%s+All".formatted(loader), (task) -> {
-				configurePublishAllTaskWithRightOrder(projects, List.of("publishModrinth", "publishCurseforge"), task, controller, childProjects);
-				task.setGroup("ab-mossy-publish-%s".formatted(loader));
+				configurePublishAllTaskWithRightOrder(projects, publishTasks, task, controller, childProjects);
+				task.setGroup("ac-mossy-release-%s".formatted(loader));
 			});
 
 			tasks.register("publish+%s+Specified".formatted(loader), (task) -> {
@@ -77,30 +83,39 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 					}
 					list.add(pr);
 				});
-				configurePublishAllTaskWithRightOrder(list, List.of("publishModrinth", "publishCurseforge"), task, controller, childProjects);
-				task.setGroup("ab-mossy-publish-%s".formatted(loader));
+				configurePublishAllTaskWithRightOrder(list, publishTasks, task, controller, childProjects);
+				task.setGroup("ac-mossy-release-%s".formatted(loader));
 			});
+
+			//
 		});
 
 		tasks.register("buildAndCollect+All", (task) -> {
 			for (String loader : loaderAndProjects.keySet()) {
 				task.dependsOn("buildAndCollect+%s+All".formatted(loader));
 			}
-			task.setGroup("a-mossy-main");
+			task.setGroup("aa-mossy-main");
 		});
 
-		tasks.register("publish+Specified", (task) -> {
+		tasks.register("buildAndCollect+Specified", (task) -> {
 			for (String loader : loaderAndProjects.keySet()) {
-				task.dependsOn("publish+%s+Specified".formatted(loader));
+				task.dependsOn("buildAndCollect+%s+Specified".formatted(loader));
 			}
-			task.setGroup("a-mossy-main");
+			task.setGroup("aa-mossy-main");
 		});
 
 		tasks.register("publish+All", (task) -> {
 			for (String loader : loaderAndProjects.keySet()) {
 				task.dependsOn("publish+%s+All".formatted(loader));
 			}
-			task.setGroup("a-mossy-main");
+			task.setGroup("aa-mossy-main");
+		});
+
+		tasks.register("publish+Specified", (task) -> {
+			for (String loader : loaderAndProjects.keySet()) {
+				task.dependsOn("publish+%s+Specified".formatted(loader));
+			}
+			task.setGroup("aa-mossy-main");
 		});
 
 		project.getGradle().addBuildListener(new BuildListener() {
@@ -120,7 +135,7 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 					if (!"stonecutter".equals(task.getGroup())) {
 						continue;
 					}
-					task.setGroup("a-mossy-stonecutter");
+					task.setGroup("aa-mossy-stonecutter");
 				}
 
 				Map<String, Map<String, List<StonecutterProject>>> loaderAndTheRepoAndProject = new HashMap<>();
@@ -128,13 +143,13 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 				loaderAndProjects.forEach((loader, projects) -> {
 					Map<String, List<StonecutterProject>> repoAndProjects = new HashMap<>();
 
-					for (StonecutterProject pr : projects) {
+					projects.forEach((pr) -> {
 						RepositoryHandler repositories = childProjects.get(pr.getProject()).getExtensions().getByType(PublishingExtension.class).getRepositories();
 						for (String repository : repositories.getNames()) {
 							List<StonecutterProject> list = repoAndProjects.computeIfAbsent(repository, (key) -> new ArrayList<>());
 							list.add(pr);
 						}
-					}
+					});
 
 					loaderAndTheRepoAndProject.put(loader, repoAndProjects);
 				});
@@ -144,7 +159,7 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 					repoAndProjects.forEach((repository, projects) -> {
 						tasks.register("publishMaven+%s+%s+All".formatted(loader, repository), (task) -> {
 							configurePublishAllTaskWithRightOrder(projects, List.of("publishMossyPluginPublicationTo%sRepository".formatted(repository)), task, controller, childProjects);
-							task.setGroup("ac-mossy-publish-maven-%s-%s".formatted(loader, repository));
+							task.setGroup("ad-mossy-maven-%s".formatted(loader));
 						});
 					});
 
@@ -153,7 +168,7 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 							for (String repository : repoAndProjects.keySet()) {
 								task.dependsOn("publishMaven+%s+%s+All".formatted(loader, repository));
 							}
-							task.setGroup("ac-mossy-publish-maven-%s".formatted(loader));
+							task.setGroup("ad-mossy-maven-%s".formatted(loader));
 						});
 						list.add(registered);
 					}
@@ -164,7 +179,7 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 						for (TaskProvider<?> taskProvider : list) {
 							task.dependsOn(taskProvider);
 						}
-						task.setGroup("ac-mossy-publish-maven");
+						task.setGroup("aa-mossy-main");
 					});
 				}
 			}
@@ -176,35 +191,50 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 		});
 
 		project.getTasks().register("generatePublishWorkflowsForEachVersion", GeneratePublishWorkflowsForEachVersionTask.class, (task) -> {
-			task.setGroup("a-mossy");
+			task.setGroup("aa-mossy-project");
 			List<String> list = controller.getVersions().stream().map(StonecutterProject::getProject).toList();
 			task.setMultiVersions(list);
 		});
 		project.getTasks().register("generatePersonalProperties", GeneratePersonalPropertiesTask.class, (task) -> {
-			task.setGroup("a-mossy");
+			task.setGroup("aa-mossy-project");
 		});
-		project.getTasks().register("regenerateRunConfigurations", Delete.class, (task) -> {
-			task.setGroup("a-mossy");
+		project.getTasks().register("updateRunConfigurations", Delete.class, (task) -> {
+			task.setGroup("aa-mossy-project");
 
 			List<String> list = controller.getVersions().stream().map(StonecutterProject::getProject).toList();
 			for (String version : list) {
-				task.delete(project.file(".idea/runConfigurations/Minecraft_Client___%s__%s.xml".formatted(version.replace(".", "_"), version)));
-				task.delete(project.file(".idea/runConfigurations/Minecraft_Server___%s__%s.xml".formatted(version.replace(".", "_"), version)));
+				if (version.contains("forge")) {
+					task.delete(childProjects.get(version).file("build/moddev"));
+				} else {
+					task.delete(project.file(".idea/runConfigurations/Minecraft_Client___%s__%s.xml".formatted(version.replace(".", "_"), version)));
+					task.delete(project.file(".idea/runConfigurations/Minecraft_Server___%s__%s.xml".formatted(version.replace(".", "_"), version)));
+				}
 			}
 
 			for (String version : list) {
-				task.finalizedBy(":%s:ideaSyncTask".formatted(version));
+				if (version.contains("forge")) {
+					task.finalizedBy(":%s:createLaunchScripts".formatted(version));
+				} else {
+					task.finalizedBy(":%s:ideaSyncTask".formatted(version));
+				}
 			}
 		});
 	}
 
 	private static void configurePublishAllTaskWithRightOrder(List<StonecutterProject> projects, List<String> publishTasks, Task task, StonecutterControllerExtension controller, Map<String, Project> childProjects) {
-		List<StonecutterProject> versions = projects
-				.stream()
-				.sorted((a, b) -> controller.compare(a.getVersion(), b.getVersion()))
-				.toList();
+		List<StonecutterProject> versions =
+				projects.size() == 1 ?
+						projects
+						:
+						projects.stream()
+							.sorted((a, b) -> controller.compare(a.getVersion(), b.getVersion()))
+							.toList();
 
 		for (String publishTask : publishTasks) {
+			if (versions.size() == 1) {
+				task.dependsOn(childProjects.get(versions.get(0).getProject()).getTasks().named(publishTask));
+				continue;
+			}
 			for (int i = 1; i < versions.size(); i++) {
 				StonecutterProject first = versions.get(i - 1);
 				StonecutterProject second = versions.get(i);

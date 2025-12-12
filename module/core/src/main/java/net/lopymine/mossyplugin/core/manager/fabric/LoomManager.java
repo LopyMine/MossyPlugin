@@ -2,10 +2,10 @@ package net.lopymine.mossyplugin.core.manager.fabric;
 
 import java.io.File;
 import java.util.*;
-import java.util.regex.Pattern;
 import lombok.experimental.ExtensionMethod;
 import net.fabricmc.loom.api.LoomGradleExtensionAPI;
 import net.fabricmc.loom.configuration.ide.RunConfigSettings;
+import net.lopymine.mossyplugin.common.MossyUtils;
 import net.lopymine.mossyplugin.core.MossyPluginCore;
 import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import org.gradle.api.Project;
@@ -13,8 +13,6 @@ import org.jetbrains.annotations.*;
 
 @ExtensionMethod(MossyPluginCore.class)
 public class LoomManager {
-
-	private static final Pattern PLAYER_NICKNAME_PATTERN = Pattern.compile("[a-zA-Z0-9_]{2,16}$");
 
 	@SuppressWarnings("UnstableApiUsage")
 	public static void apply(@NotNull MossyProjectConfigurationData data, LoomGradleExtensionAPI loom) {
@@ -32,8 +30,8 @@ public class LoomManager {
 
 		Properties personalProperties = project.getPersonalProperties();
 
-		String playerNickname = getPlayerNickname(personalProperties);
-		UUID playerUuid = getPlayerUuid(personalProperties);
+		String playerNickname = MossyUtils.getPlayerNickname(personalProperties);
+		UUID playerUuid = MossyUtils.getPlayerUuid(personalProperties);
 		Object quickPlayWorld = personalProperties.get("quick_play_world");
 		Object pathToSpongeMixin = personalProperties.get("absolute_path_to_sponge_mixin");
 
@@ -48,30 +46,6 @@ public class LoomManager {
 				addVMArg(runConfig, "-javaagent", pathToSpongeMixin);
 			}
  		}
-	}
-
-	private static String getPlayerNickname(Properties personalProperties) {
-		Object o = personalProperties.get("player_nickname");
-		if (o == null) {
-			return "Player";
-		}
-		String playerNickname = o.toString();
-		if (!PLAYER_NICKNAME_PATTERN.matcher(playerNickname).matches()) {
-			return "Player";
-		}
-		return playerNickname;
-	}
-
-	private static @Nullable UUID getPlayerUuid(Properties personalProperties) {
-		try {
-			Object o = personalProperties.get("player_uuid");
-			if (o == null) {
-				return null;
-			}
-			return UUID.fromString(o.toString());
-		} catch (Exception e) {
-			return null;
-		}
 	}
 
 	@SuppressWarnings("all")

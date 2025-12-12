@@ -87,7 +87,7 @@ public class MossyPluginCore implements Plugin<Project> {
 				RepositoryHandler repositories = pe.getRepositories();
 				for (ArtifactRepository repository : repositories) {
 					project.getRootProject().getTasks().register("publishMaven+%s+%s+%s".formatted(loader, repository.getName(), version), (task) -> {
-						task.setGroup("ac-mossy-publish-maven-%s-%s".formatted(loader, repository.getName().toLowerCase()));
+						task.setGroup("ad-mossy-maven-%s".formatted(loader));
 						task.dependsOn(":%s:publishAllPublicationsTo%sRepository".formatted(project.getName(), repository.getName()));
 					});
 				}

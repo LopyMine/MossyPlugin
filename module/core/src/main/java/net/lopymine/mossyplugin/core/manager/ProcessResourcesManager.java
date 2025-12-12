@@ -6,6 +6,7 @@ import net.lopymine.mossyplugin.core.MossyPluginCore;
 import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import net.lopymine.mossyplugin.core.extension.MossyCoreProcessResourcesExtension;
 import org.gradle.api.*;
+import org.gradle.api.file.RelativePath;
 import org.gradle.api.internal.TaskInputsInternal;
 import org.gradle.language.jvm.tasks.ProcessResources;
 import org.jetbrains.annotations.NotNull;
@@ -51,8 +52,11 @@ public class ProcessResourcesManager {
 
 		List<String> mixinConfigs = new ArrayList<>();
 		mixinConfigs.add("%s.mixins.json".formatted(modId));
-		for (String config : project.getProperty("data.mixin_configs").split(" ")) {
-			mixinConfigs.add("%s-%s.mixins.json".formatted(modId, config));
+		String additionalMixinConfigIds = project.getProperty("data.mixin_configs");
+		if (!additionalMixinConfigIds.equals("none")) {
+			for (String config : additionalMixinConfigIds.split(" ")) {
+				mixinConfigs.add("%s-%s.mixins.json".formatted(modId, config));
+			}
 		}
 		properties.put("fabric_trick_mixin_configs", String.join("\",\"", mixinConfigs));
 
@@ -75,6 +79,15 @@ public class ProcessResourcesManager {
 		processResources.filesMatching("aws/*.*", (details) -> {
 			if (!details.getName().equals("%s.%s".formatted(project.getName(), e))) {
 				details.exclude();
+			} else {
+				if (data.loaderName().contains("forge")) {
+					String[] segments = details.getRelativePath().getSegments();
+					String[] strings = Arrays.copyOf(segments, segments.length);
+					strings[strings.length-1] = "accesstransformer.cfg";
+					strings[strings.length-2] = "META-INF";
+					RelativePath path = new RelativePath(true, strings);
+					details.setRelativePath(path);
+				}
 			}
 		});
 

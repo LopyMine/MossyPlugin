@@ -67,12 +67,15 @@ public class ForgeLoaderManager implements LoaderManager {
 		mixin.config(mainMixin);
 		registeredMixinConfigs.add(mainMixin);
 
-		String[] mixins = project.getProperty("data.mixin_configs").split(" ");
-		for (String mixinConfig : mixins) {
-			String id = "%s-%s.mixins.json".formatted(modId, mixinConfig);
+		String additionalMixinConfigIds = project.getProperty("data.mixin_configs");
+		if (!additionalMixinConfigIds.equals("none")) {
+			String[] mixins = additionalMixinConfigIds.split(" ");
+			for (String mixinConfig : mixins) {
+				String id = "%s-%s.mixins.json".formatted(modId, mixinConfig);
 
-			mixin.config(id);
-			registeredMixinConfigs.add(id);
+				mixin.config(id);
+				registeredMixinConfigs.add(id);
+			}
 		}
 
 		String mixinConfigs = String.join(",", registeredMixinConfigs);
