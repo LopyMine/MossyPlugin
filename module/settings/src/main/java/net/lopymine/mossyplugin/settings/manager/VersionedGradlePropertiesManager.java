@@ -31,7 +31,7 @@ public class VersionedGradlePropertiesManager {
 						project.loaderManager()
 				);
 			} catch (Exception e) {
-				throw new RuntimeException("Failed to create versioned gradle properties for " + project + ", reason: " + e.getMessage(), e);
+				throw new RuntimeException("Failed to create versioned gradle properties for " + project.projectName() + ", reason: " + e.getMessage(), e);
 			}
 		}
 	}
@@ -109,7 +109,7 @@ public class VersionedGradlePropertiesManager {
 				}
 			}
 			Files.writeString(gradlePropertiesFile.toPath(), builder.toString(), StandardCharsets.UTF_8);
-			MossyPluginSettings.LOGGER.log("Successfully created gradle.properties for " + minecraft);
+			MossyPluginSettings.LOGGER.log("Successfully created gradle.properties for " + projectName);
 			return;
 		}
 

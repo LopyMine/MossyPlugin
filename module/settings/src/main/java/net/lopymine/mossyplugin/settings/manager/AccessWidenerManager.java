@@ -29,7 +29,7 @@ public class AccessWidenerManager {
 			throw new RuntimeException(e);
 		}
 
-		MossyPluginSettings.LOGGER.log("Successfully created AW for " + project);
+		MossyPluginSettings.LOGGER.log("Successfully created AW for " + project.projectName());
 	}
 
 	@Nullable
