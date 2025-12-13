@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 @Getter
 public class MossyPluginSettings implements Plugin<Settings> {
 
-	public static final String PLUGIN_VERSION = "1.1.5";
+	public static final String PLUGIN_VERSION = "1.1.5.1";
 
 	public static final MossyLogger LOGGER = new MossyLogger("Settings");
 
