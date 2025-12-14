@@ -14,7 +14,7 @@ public class StonecutterManager {
 				String last = versions.get(versions.size() - 1);
 				for (String version : versions) {
 					String ver = "%s-%s".formatted(loader, version);
-					builder.vers(ver, version);
+					builder.version(ver, version);
 					if (version.equals(last)) {
 						builder.getVcsVersion().set(ver);
 					}
