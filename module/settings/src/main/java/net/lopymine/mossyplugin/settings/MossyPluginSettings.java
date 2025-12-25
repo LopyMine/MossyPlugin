@@ -12,12 +12,14 @@ import org.jetbrains.annotations.NotNull;
 @Getter
 public class MossyPluginSettings implements Plugin<Settings> {
 
-	public static final String PLUGIN_VERSION = "1.1.5.1";
+	public static final String PLUGIN_VERSION = "1.1.2.0";
 
 	public static final MossyLogger LOGGER = new MossyLogger("Settings");
 
 	@Override
 	public void apply(@NotNull Settings settings) {
+		settings.getPlugins().apply("dev.kikugie.stonecutter");
+
 		Properties gradleProperties = getGradleProperties(settings.getRootDir());
 		settings.getRootProject().setName(MossyUtils.getProperty(gradleProperties, "data.mod_name"));
 		LOGGER.setup(settings.getRootProject().getName());
