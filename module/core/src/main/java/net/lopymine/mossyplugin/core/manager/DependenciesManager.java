@@ -82,17 +82,16 @@ public class DependenciesManager {
 
 	private static void addRepositories(Project project) {
 		project.getRepositories().mavenCentral();
-		addRepository(project, "Quilt", "https://maven.quiltmc.org/repository/release/");
-		addRepository(project, "Sonatype", "https://oss.sonatype.org/content/repositories/snapshots/");
-		addRepository(project, "Terraformers", "https://maven.terraformersmc.com/");
-		addRepository(project, "YACL", "https://maven.isxander.dev/releases");
-		addRepository(project, "Nucleoid", "https://maven.nucleoid.xyz/");
 		addRepository(project, "Modrinth", "https://api.modrinth.com/maven", (repository) -> {
 			repository.content((descriptor) -> {
 				descriptor.includeGroup("maven.modrinth");
 			});
 		});
-
+		addRepository(project, "Quilt", "https://maven.quiltmc.org/repository/release/");
+		addRepository(project, "Sonatype", "https://oss.sonatype.org/content/repositories/snapshots/");
+		addRepository(project, "Terraformers", "https://maven.terraformersmc.com/");
+		addRepository(project, "YACL", "https://maven.isxander.dev/releases");
+		addRepository(project, "Nucleoid", "https://maven.nucleoid.xyz/");
 	}
 
 	private static void addRepository(Project project, String name, String url) {
