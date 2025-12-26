@@ -32,7 +32,13 @@ public class ModrinthDependenciesAPI {
 		JsonElement jsonElement = array.get(0);
 		JsonObject jsonObject = jsonElement.getAsJsonObject();
 
-		return jsonObject.get("version_number").getAsString();
+		String versionNumber = jsonObject.get("version_number").getAsString();
+
+		if (versionNumber.contains(minecraftVersion)) {
+			return versionNumber;
+		}
+
+		return jsonObject.get("id").getAsString();
 	}
 
 }
