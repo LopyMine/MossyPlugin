@@ -39,6 +39,23 @@ public class StonecutterManager {
 		Arrays.stream(project.getProperty("mod_loaders").split(" ")).forEach((loader) -> {
 			stonecutter.getConstants().put(loader, project.getName().startsWith(loader));
 		});
+
+		stonecutter.replacements((container) -> {
+			container.string((spec) -> {
+				spec.getDirection().set(stonecutter.getCurrent().getParsed().matches(">=1.21.11"));
+				spec.replace("ResourceLocation", "Identifier");
+				spec.replace(".location()", ".identifier()");
+				spec.replace("::location", "::identifier");
+			});
+
+			container.string((spec) -> {
+				spec.getDirection().set(stonecutter.getCurrent().getProject().contains("forge"));
+				spec.replace("import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;", "import net.minecraft.commands.CommandSourceStack;");
+				spec.replace("FabricClientCommandSource", "CommandSourceStack");
+			});
+		});
+
+		stonecutter.getFilters().exclude("aws/**");
 	}
 
 	private static @NotNull String getFormatted(String modVersion) {
