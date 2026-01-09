@@ -55,7 +55,7 @@ public class StonecutterManager {
 			});
 		});
 
-		stonecutter.getFilters().exclude("aws/**");
+		stonecutter.getFilters().exclude("resources/aws/**");
 	}
 
 	private static @NotNull String getFormatted(String modVersion) {
