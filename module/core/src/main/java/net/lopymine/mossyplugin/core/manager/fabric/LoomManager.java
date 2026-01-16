@@ -35,11 +35,18 @@ public class LoomManager {
 		Object quickPlayWorld = personalProperties.get("quick_play_world");
 		Object pathToSpongeMixin = personalProperties.get("absolute_path_to_sponge_mixin");
 
+		String sides = data.project().getProperty("data.sides").toLowerCase(Locale.ROOT);
+		boolean createClient = sides.equals("client") || sides.equals("both");
+		boolean createServer = sides.equals("server") || sides.equals("both");
+
 		for (RunConfigSettings runConfig : loom.getRunConfigs()) {
-			runConfig.setIdeConfigGenerated(true);
+			boolean disableServer = runConfig.getEnvironment().equals("server") && !createServer;
+			boolean disableClient = runConfig.getEnvironment().equals("client") && !createClient;
+			runConfig.setIdeConfigGenerated(!disableServer && !disableClient);
+
 			runConfig.setRunDir("../../runs/" + runConfig.getEnvironment());
 
-			if (runConfig.getEnvironment().equals("client")) {
+			if (runConfig.getEnvironment().equals("client") && createClient) {
 				addProgramArg(runConfig, "--username", playerNickname);
 				addProgramArg(runConfig, "--uuid", playerUuid);
 				addProgramArg(runConfig, "--quickPlaySingleplayer", quickPlayWorld);

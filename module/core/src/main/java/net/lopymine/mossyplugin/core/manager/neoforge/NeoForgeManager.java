@@ -32,21 +32,29 @@ public class NeoForgeManager {
 		extension.getValidateAccessTransformers().set(true);
 		extension.getAccessTransformers().from("../../src/main/resources/aws/%s-%s.cfg".formatted(data.loaderName(), data.minecraftVersion()));
 
+		String sides = data.project().getProperty("data.sides").toLowerCase(Locale.ROOT);
+		boolean createClient = sides.equals("client") || sides.equals("both");
+		boolean createServer = sides.equals("server") || sides.equals("both");
+
 		extension.runs((container) -> {
 			Path runs = project.getRootProject().getProjectDir().toPath().resolve("runs");
 
-			RunModel client = container.create("client");
-			client.client();
-			client.getGameDirectory().set(runs.resolve("client").toFile());
-			addProgramArgument(client, "--username ", playerNickname);
-			addProgramArgument(client, "--uuid ", playerUuid);
-			addProgramArgument(client, "--quickPlaySingleplayer ", quickPlayWorld);
-			//addVMArgument(client, "-javaagent:", pathToSpongeMixin);
+			if (createClient) {
+				RunModel client = container.create("client");
+				client.client();
+				client.getGameDirectory().set(runs.resolve("client").toFile());
+				addProgramArgument(client, "--username ", playerNickname);
+				addProgramArgument(client, "--uuid ", playerUuid);
+				addProgramArgument(client, "--quickPlaySingleplayer ", quickPlayWorld);
+				//addVMArgument(client, "-javaagent:", pathToSpongeMixin); doesn't required
+			}
 
-			RunModel server = container.create("server");
-			server.server();
-			server.programArgument("--nogui");
-			server.getGameDirectory().set(runs.resolve("server").toFile());
+			if (createServer) {
+				RunModel server = container.create("server");
+				server.server();
+				server.programArgument("--nogui");
+				server.getGameDirectory().set(runs.resolve("server").toFile());
+			}
 		});
 
 		extension.mods((container) -> {
@@ -62,14 +70,16 @@ public class NeoForgeManager {
 		if (argument == null || argument.toString().equals("none")) {
 			return;
 		}
-		client.programArgument(key + argument);
+		client.programArgument(key);
+		client.programArgument(argument.toString());
 	}
 
 	private static void addVMArgument(RunModel client, String key, Object argument) {
 		if (argument == null || argument.toString().equals("none")) {
 			return;
 		}
-		client.jvmArgument(key + argument);
+		client.jvmArgument(key);
+		client.jvmArgument(argument.toString());
 	}
 
 }
