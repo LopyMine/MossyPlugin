@@ -59,7 +59,9 @@ public class ProcessResourcesManager {
 				mixinConfigs.add("%s-%s.mixins.json".formatted(modId, config));
 			}
 		}
+
 		properties.put("fabric_trick_mixin_configs", String.join("\",\"", mixinConfigs));
+		properties.put("neoforge_trick_mixin_configs", String.join("\n", mixinConfigs.stream().map((config) -> "[[mixins]]\nconfig = \"%s-%s.mixins.json\"\n".formatted(modId, config)).toList()));
 		properties.put("fabric_trick_side", project.getProperty("data.sides").toLowerCase(Locale.ROOT).replace("both", "*"));
 		properties.put("neoforge_trick_side", project.getProperty("data.sides").toUpperCase(Locale.ROOT));
 
