@@ -50,6 +50,7 @@ public class StonecutterManager {
 
 			container.string((spec) -> {
 				spec.getDirection().set(stonecutter.getCurrent().getProject().contains("forge"));
+				spec.getId().set("client_fabric_commands");
 				spec.replace("import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;", "import net.minecraft.commands.CommandSourceStack;");
 				spec.replace("FabricClientCommandSource", "CommandSourceStack");
 			});

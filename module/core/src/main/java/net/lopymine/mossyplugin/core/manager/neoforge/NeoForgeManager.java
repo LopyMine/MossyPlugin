@@ -43,9 +43,9 @@ public class NeoForgeManager {
 				RunModel client = container.create("client");
 				client.client();
 				client.getGameDirectory().set(runs.resolve("client").toFile());
-				addProgramArgument(client, "--username ", playerNickname);
-				addProgramArgument(client, "--uuid ", playerUuid);
-				addProgramArgument(client, "--quickPlaySingleplayer ", quickPlayWorld);
+				addProgramArgument(client, "--username", playerNickname);
+				addProgramArgument(client, "--uuid", playerUuid);
+				addProgramArgument(client, "--quickPlaySingleplayer", quickPlayWorld);
 				//addVMArgument(client, "-javaagent:", pathToSpongeMixin); doesn't required
 			}
 
