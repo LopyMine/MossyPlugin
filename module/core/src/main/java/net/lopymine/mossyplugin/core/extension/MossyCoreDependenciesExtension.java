@@ -31,6 +31,9 @@ public class MossyCoreDependenciesExtension {
 	@Input
 	String lombok;
 
+	@Input
+	String disableMixinAp;
+
 	@Nested
 	MossyCoreAdditionalDependencies additional = new MossyCoreAdditionalDependencies();
 

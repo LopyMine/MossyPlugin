@@ -49,7 +49,9 @@ public class ForgeLoaderManager implements LoaderManager {
 		deps.add("jarJar", "io.github.llamalad7:mixinextras-forge:%s".formatted(mixinExtrasVersion));
 		deps.add("implementation", "io.github.llamalad7:mixinextras-forge:%s".formatted(mixinExtrasVersion));
 
-		deps.add("annotationProcessor", "org.spongepowered:mixin:%s:processor".formatted(mixinVersion));
+		if (!"true".equals(dependencies.getDisableMixinAp())) {
+			deps.add("annotationProcessor", "org.spongepowered:mixin:%s:processor".formatted(mixinVersion));
+		}
 
 		this.configureMixins(extensions, project);
 	}
