@@ -32,6 +32,7 @@ public class LoomManager {
 
 		String playerNickname = MossyUtils.getPlayerNickname(personalProperties);
 		UUID playerUuid = MossyUtils.getPlayerUuid(personalProperties);
+		Map<String, UUID> altAccounts = MossyUtils.getAltAccounts(personalProperties);
 		Object quickPlayWorld = personalProperties.get("quick_play_world");
 		Object pathToSpongeMixin = personalProperties.get("absolute_path_to_sponge_mixin");
 
@@ -53,6 +54,8 @@ public class LoomManager {
 				addVMArg(runConfig, "-javaagent", pathToSpongeMixin);
 			}
  		}
+
+		//loom.getRunConfigs() todo : add alt accounts
 	}
 
 	@SuppressWarnings("all")

@@ -10,6 +10,34 @@ public class MossyUtils {
 
 	private static final Pattern PLAYER_NICKNAME_PATTERN = Pattern.compile("[a-zA-Z0-9_]{2,16}$");
 
+	public static Map<String, UUID> getAltAccounts(Properties personalProperties) {
+		Object o = personalProperties.get("alt_accounts");
+		if (o == null) {
+			return new HashMap<>();
+		}
+		String[] array = o.toString().split(" ");
+		if (array.length == 0 || array.length % 2 != 0) {
+			return new HashMap<>();
+		}
+
+		HashMap<String, UUID> map = new HashMap<>();
+
+		for (int i = 0; i < array.length; i += 2) {
+			String nickname = array[i];
+			if (!PLAYER_NICKNAME_PATTERN.matcher(nickname).matches()) {
+				continue;
+			}
+			try {
+				String uuid = array[i + 1];
+				map.put(nickname, UUID.fromString(uuid));
+			} catch (Exception e) {
+				return new HashMap<>();
+			}
+		}
+
+		return map;
+	}
+
 	public static String getPlayerNickname(Properties personalProperties) {
 		Object o = personalProperties.get("player_nickname");
 		if (o == null) {
