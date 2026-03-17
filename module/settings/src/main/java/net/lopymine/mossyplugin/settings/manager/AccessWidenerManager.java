@@ -1,5 +1,6 @@
 package net.lopymine.mossyplugin.settings.manager;
 
+import dev.kikugie.stonecutter.settings.StonecutterSettingsExtension;
 import java.io.*;
 import java.nio.file.Path;
 import java.util.*;
@@ -11,20 +12,21 @@ import org.jetbrains.annotations.*;
 public class AccessWidenerManager {
 
 	public static void apply(@NotNull Settings settings, List<MossyProject> projects) {
+		StonecutterSettingsExtension stonecutter = settings.getExtensions().getByType(StonecutterSettingsExtension.class);
 		Path path = settings.getRootDir().toPath();
 		for (MossyProject project : projects) {
-			createExampleAccessWidener(path, project);
+			createExampleAccessWidener(path, project, stonecutter);
 		}
 	}
 
-	public static void createExampleAccessWidener(Path rootProject, MossyProject project) {
-		File awFile = createAWFile(rootProject, project);
+	public static void createExampleAccessWidener(Path rootProject, MossyProject project, StonecutterSettingsExtension stonecutter) {
+		File awFile = createAWFile(rootProject, project, stonecutter);
 		if (awFile == null) {
 			return;
 		}
 
 		try (FileWriter writer = new FileWriter(awFile)) {
-			project.loaderManager().fillAWWillExampleText(writer, project.minecraftVersion());
+			project.loaderManager().fillAWWillExampleText(writer, project.comparableMinecraftVersion(), stonecutter);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -33,7 +35,7 @@ public class AccessWidenerManager {
 	}
 
 	@Nullable
-	private static File createAWFile(Path rootProject, MossyProject project) {
+	private static File createAWFile(Path rootProject, MossyProject project, StonecutterSettingsExtension stonecutter) {
 		String projectName = project.projectName();
 
 		Path awsFolder = rootProject.resolve("src/main/resources/aws/");
@@ -43,7 +45,7 @@ public class AccessWidenerManager {
 			return null;
 		}
 
-		File versionedAWFile = awsFolder.resolve("%s.%s".formatted(projectName, project.loaderManager().getAWExtension())).toFile();
+		File versionedAWFile = awsFolder.resolve("%s.%s".formatted(projectName, project.loaderManager().getAWExtension(project.comparableMinecraftVersion(), stonecutter))).toFile();
 		if (versionedAWFile.exists()) {
 			return null;
 		}

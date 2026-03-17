@@ -11,6 +11,7 @@ public record MossyProjectConfigurationData(
 		String projectName,
 		String loaderName,
 		String minecraftVersion,
+		String comparableMinecraftVersion,
 		LoaderManager loaderManager,
 		Project project
 ) {
@@ -19,7 +20,8 @@ public record MossyProjectConfigurationData(
 		String projectName = project.getName();
 		String loaderName = MossyUtils.substringBefore(projectName, "-");
 		String minecraftVersion = MossyUtils.substringSince(projectName, "-");
+		String comparableMinecraftVersion = MossyUtils.substringBefore(minecraftVersion, "-");
 		LoaderManager loaderManager = LoaderManager.of(loaderName);
-		return new MossyProjectConfigurationData(plugin, projectName, loaderName, minecraftVersion, loaderManager, project);
+		return new MossyProjectConfigurationData(plugin, projectName, loaderName, minecraftVersion, comparableMinecraftVersion, loaderManager, project);
 	}
 }

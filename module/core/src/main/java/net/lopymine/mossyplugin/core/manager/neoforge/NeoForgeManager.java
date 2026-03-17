@@ -44,9 +44,9 @@ public class NeoForgeManager {
 				RunModel client = container.create("client");
 				client.client();
 				client.getGameDirectory().set(runs.resolve("client").toFile());
-				addProgramArgument(client, "--username", playerNickname);
-				addProgramArgument(client, "--uuid", playerUuid);
-				addProgramArgument(client, "--quickPlaySingleplayer", quickPlayWorld);
+				addProgramArg(client, "--username", playerNickname);
+				addProgramArg(client, "--uuid", playerUuid);
+				addProgramArg(client, "--quickPlaySingleplayer", quickPlayWorld);
 
 				for (Entry<String, UUID> entry : altAccounts.entrySet()) {
 					String runName = "client_" + entry.getKey();
@@ -54,9 +54,9 @@ public class NeoForgeManager {
 					RunModel altClient = container.create(runName);
 					altClient.client();
 					altClient.getGameDirectory().set(runs.resolve(runName).toFile());
-					addProgramArgument(altClient, "--username", entry.getKey());
-					addProgramArgument(altClient, "--uuid", entry.getValue());
-					addProgramArgument(altClient, "--quickPlaySingleplayer", quickPlayWorld);
+					addProgramArg(altClient, "--username", entry.getKey());
+					addProgramArg(altClient, "--uuid", entry.getValue());
+					addProgramArg(altClient, "--quickPlaySingleplayer", quickPlayWorld);
 				}
 			}
 
@@ -77,7 +77,7 @@ public class NeoForgeManager {
 		});
 	}
 
-	private static void addProgramArgument(RunModel client, String key, Object argument) {
+	private static void addProgramArg(RunModel client, String key, Object argument) {
 		if (argument == null || argument.toString().equals("none")) {
 			return;
 		}

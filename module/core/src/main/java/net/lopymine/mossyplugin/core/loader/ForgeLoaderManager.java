@@ -87,7 +87,7 @@ public class ForgeLoaderManager implements LoaderManager {
 
 	@Override
 	public void configureExtensions(@NotNull MossyProjectConfigurationData data) {
-		data.project().getTasks().getByName("jar").finalizedBy(this.getJarTaskName());
+		data.project().getTasks().getByName("jar").finalizedBy(this.getJarTaskName(data));
 		for (JavaCompile compile : data.project().getTasks().withType(JavaCompile.class)) {
 			compile.getOptions().getCompilerArgs().add("-Xlint:-removal");
 			compile.getOptions().getCompilerArgs().add("-Xlint:-deprecation");
@@ -101,17 +101,17 @@ public class ForgeLoaderManager implements LoaderManager {
 	}
 
 	@Override
-	public String getModDependenciesImplementationMethod() {
+	public String getModDependenciesImplementationMethod(MossyProjectConfigurationData data) {
 		return "modImplementation";
 	}
 
 	@Override
-	public String getJarTaskName() {
+	public String getJarTaskName(MossyProjectConfigurationData data) {
 		return "reobfJar";
 	}
 
 	@Override
-	public String getAWFileExtension() {
+	public String getAWFileExtension(MossyProjectConfigurationData data) {
 		return "cfg";
 	}
 

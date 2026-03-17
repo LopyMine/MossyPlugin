@@ -1,5 +1,6 @@
 package net.lopymine.mossyplugin.settings.loader;
 
+import dev.kikugie.stonecutter.settings.StonecutterSettingsExtension;
 import java.io.*;
 
 public interface LoaderManager {
@@ -20,8 +21,8 @@ public interface LoaderManager {
 
 	String getGPUpdatedProperty(String id, String minecraft);
 
-	void fillAWWillExampleText(FileWriter writer, String minecraft) throws IOException;
+	void fillAWWillExampleText(FileWriter writer, String minecraft, StonecutterSettingsExtension stonecutter) throws IOException;
 
-	String getAWExtension();
+	String getAWExtension(String minecraft, StonecutterSettingsExtension stonecutter);
 
 }

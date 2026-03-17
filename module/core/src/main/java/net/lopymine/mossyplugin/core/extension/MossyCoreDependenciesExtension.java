@@ -11,9 +11,6 @@ public class MossyCoreDependenciesExtension {
 	String minecraft;
 
 	@Input
-	String mappings;
-
-	@Input
 	String fabricApi;
 
 	@Input

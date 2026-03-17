@@ -1,5 +1,6 @@
 package net.lopymine.mossyplugin.settings.loader;
 
+import dev.kikugie.stonecutter.settings.StonecutterSettingsExtension;
 import java.io.FileWriter;
 import java.util.List;
 import net.lopymine.mossyplugin.settings.api.*;
@@ -30,12 +31,12 @@ public class NeoForgeLoaderManager implements LoaderManager {
 	}
 
 	@Override
-	public void fillAWWillExampleText(FileWriter writer, String minecraft) {
+	public void fillAWWillExampleText(FileWriter writer, String minecraft, StonecutterSettingsExtension stonecutter) {
 
 	}
 
 	@Override
-	public String getAWExtension() {
+	public String getAWExtension(String minecraft, StonecutterSettingsExtension stonecutter) {
 		return "cfg";
 	}
 

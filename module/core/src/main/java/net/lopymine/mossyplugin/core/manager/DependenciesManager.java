@@ -34,7 +34,7 @@ public class DependenciesManager {
 		MossyCoreAdditionalDependencies additional = extension.getAdditional();
 		additional.disable("yacl");
 
-		String modImplementation = loaderManager.getModDependenciesImplementationMethod();
+		String modImplementation = loaderManager.getModDependenciesImplementationMethod(data);
 
 		Map<String, AdditionalDependencyOverride> overrides = additional.getOverrides();
 		Set<String> disabled = additional.getDisabled();

@@ -6,6 +6,7 @@ public record MossyProject(
 		String projectName,
 		String loaderName,
 		String minecraftVersion,
+		String comparableMinecraftVersion,
 		LoaderManager loaderManager
 ) {
 

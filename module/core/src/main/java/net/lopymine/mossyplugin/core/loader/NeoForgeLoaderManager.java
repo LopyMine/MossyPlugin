@@ -42,17 +42,17 @@ public class NeoForgeLoaderManager implements LoaderManager {
 	}
 
 	@Override
-	public String getModDependenciesImplementationMethod() {
+	public String getModDependenciesImplementationMethod(MossyProjectConfigurationData data) {
 		return "implementation";
 	}
 
 	@Override
-	public String getJarTaskName() {
+	public String getJarTaskName(MossyProjectConfigurationData data) {
 		return "jar";
 	}
 
 	@Override
-	public String getAWFileExtension() {
+	public String getAWFileExtension(MossyProjectConfigurationData data) {
 		return "cfg";
 	}
 

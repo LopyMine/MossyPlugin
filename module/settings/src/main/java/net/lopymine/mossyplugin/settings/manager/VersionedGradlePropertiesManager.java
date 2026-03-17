@@ -27,7 +27,7 @@ public class VersionedGradlePropertiesManager {
 						project.minecraftVersion(),
 						additionalDependencies,
 						gradleProperties,
-						(modId, ver) -> ModrinthDependenciesAPI.getVersion(modId, ver, project.loaderName()),
+						(modId) -> ModrinthDependenciesAPI.getVersion(modId, project.minecraftVersion(), project.loaderName()),
 						project.loaderManager()
 				);
 			} catch (Exception e) {
@@ -43,7 +43,7 @@ public class VersionedGradlePropertiesManager {
 			String minecraft,
 			List<String> additionalDependencies,
 			Properties rootGradleProperties,
-			BiFunction<String, String, String> dependResolver,
+			Function<String, String> dependResolver,
 			LoaderManager loaderManager
 	) throws IOException {
 		File gradlePropertiesFile = getOrCreateGradlePropertiesFile(rootPath, projectName);
@@ -105,7 +105,7 @@ public class VersionedGradlePropertiesManager {
 				builder.append("\n");
 				builder.append("# Additional Dependencies Properties\n");
 				for (String dependency : additionalDependencies) {
-					fillModrinthDependency(builder, dependency, dependResolver.apply(dependency, minecraft), minecraft, loader);
+					fillModrinthDependency(builder, dependency, dependResolver.apply(dependency), minecraft, loader);
 				}
 			}
 			Files.writeString(gradlePropertiesFile.toPath(), builder.toString(), StandardCharsets.UTF_8);
@@ -123,7 +123,7 @@ public class VersionedGradlePropertiesManager {
 
 				String dependencyId = MossyUtils.substringSince(key, ".");
 				String updatedValue = key.startsWith("dep.") ?
-						dependResolver.apply(dependencyId, minecraft)
+						dependResolver.apply(dependencyId)
 						:
 						key.startsWith("build.") ?
 								loaderManager.getGPUpdatedProperty(dependencyId, minecraft)
@@ -147,7 +147,7 @@ public class VersionedGradlePropertiesManager {
 			String text = Files.readString(gradlePropertiesFile.toPath(), StandardCharsets.UTF_8);
 			StringBuilder builder = new StringBuilder(text.endsWith("\n") ? text : text + "\n");
 			for (String depend : missingDependencies) {
-				fillModrinthDependency(builder, depend, dependResolver.apply(depend, minecraft), minecraft, loader);
+				fillModrinthDependency(builder, depend, dependResolver.apply(depend), minecraft, loader);
 			}
 			Files.writeString(gradlePropertiesFile.toPath(), builder.toString(), StandardCharsets.UTF_8);
 			MossyPluginSettings.LOGGER.log("Successfully added new depends " + missingDependencies + " to gradle.properties for " + projectName);

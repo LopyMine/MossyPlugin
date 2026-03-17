@@ -118,10 +118,23 @@ public class MossyPluginCore implements Plugin<Project> {
 			project.getTasks().register("buildAndCollect", Copy.class, task -> {
 				task.setGroup("build");
 				task.dependsOn("rebuildLibs", "build");
-				task.from(((Jar) project.getTasks().getByName(loaderManager.getJarTaskName())).getArchiveFile().get());
+				task.from(((Jar) project.getTasks().getByName(loaderManager.getJarTaskName(data))).getArchiveFile().get());
 				task.into(getRootFile(project, "libs/"));
 			});
-			for (String publishTask : List.of("publishModrinth", "publishCurseforge")) {
+
+			List<String> publishTasks = new ArrayList<>();
+
+			String modrinthId = getProperty(project, "modrinth_id");
+			String curseForgeId = getProperty(project,"curseforge_id");
+
+			if (!modrinthId.equals("none")) {
+				publishTasks.add("publishModrinth");
+			}
+			if (!curseForgeId.equals("none")) {
+				publishTasks.add("publishCurseforge");
+			}
+
+			for (String publishTask : publishTasks) {
 				project.getTasks().named(publishTask).configure((task) -> {
 					task.doLast((t) -> {
 						try {
@@ -158,16 +171,19 @@ public class MossyPluginCore implements Plugin<Project> {
 	public static int getJavaVersion(Project project) {
 		String currentMCVersion = getCurrentMCVersion(project);
 		StonecutterBuildExtension stonecutter = getStonecutter(project);
-		return stonecutter.compare("1.20.5", currentMCVersion) == 1 ?
-				stonecutter.compare("1.18", currentMCVersion) == 1 ?
-						stonecutter.compare("1.16.5", currentMCVersion) == 1 ?
-								8
+		return stonecutter.compare("26.1", currentMCVersion) == 1 ?
+				stonecutter.compare("1.20.5", currentMCVersion) == 1 ?
+						stonecutter.compare("1.18", currentMCVersion) == 1 ?
+								stonecutter.compare("1.16.5", currentMCVersion) == 1 ?
+										8
+										:
+										16
 								:
-								16
+								17
 						:
-						17
+						21
 				:
-				21;
+				25;
 	}
 
 
@@ -253,7 +269,11 @@ public class MossyPluginCore implements Plugin<Project> {
 	}
 
 	public static String getCurrentMCVersion(@NotNull Project project) {
-		return getStonecutter(project).getCurrent().getVersion();
+		String version = getStonecutter(project).getCurrent().getVersion();
+		if (version.startsWith("26.1-")) {
+			return "26.1";
+		}
+		return version;
 	}
 
 	public static String getCurrentLoader(@NotNull Project project) {
@@ -270,7 +290,7 @@ public class MossyPluginCore implements Plugin<Project> {
 
 	public String getMossyProjectVersion(MossyProjectConfigurationData data) {
 		String modVersion = MossyUtils.getProperty(data.project(), "data.mod_version");
-		return "%s+%s+%s".formatted(modVersion, data.minecraftVersion(), data.loaderName());
+		return "%s+%s+%s".formatted(modVersion, data.comparableMinecraftVersion(), data.loaderName());
 	}
 
 	public static File getRootFile(@NotNull Project project, String path) {

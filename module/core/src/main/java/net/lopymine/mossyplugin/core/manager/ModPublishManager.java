@@ -45,7 +45,7 @@ public class ModPublishManager {
 		boolean cannotUpload = testPublish || ((curseForgeApiKey == null && !curseForgeId.equals("none")) || (modrinthApiKey == null && !modrinthId.equals("none")));
 
 		mpe.getDisplayName().set(name);
-		mpe.getFile().set(getModFile(project, loaderManager));
+		mpe.getFile().set(getModFile(data));
 		mpe.getChangelog().set(getChangelog(project));
 		mpe.getType().set(getType(versionType));
 		mpe.getModLoaders().set(List.of(loaderName));
@@ -120,8 +120,8 @@ public class ModPublishManager {
 		MossyPluginCore.LOGGER.logModule("MPP","Dry Run: %s", mpe.getDryRun().get());
 	}
 
-	private static Provider<RegularFile> getModFile(@NotNull Project project, LoaderManager loaderManager) {
-		return ((Jar) project.getTasks().getByName(loaderManager.getJarTaskName())).getArchiveFile();
+	private static Provider<RegularFile> getModFile(MossyProjectConfigurationData data) {
+		return ((Jar) data.project().getTasks().getByName(data.loaderManager().getJarTaskName(data))).getArchiveFile();
 	}
 
 	private static ReleaseType getType(String versionType) {

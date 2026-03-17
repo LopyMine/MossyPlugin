@@ -27,9 +27,9 @@ public interface LoaderManager {
 
 	boolean excludeUselessFiles(FileCopyDetails details);
 
-	String getModDependenciesImplementationMethod();
+	String getModDependenciesImplementationMethod(MossyProjectConfigurationData data);
 
-	String getJarTaskName();
+	String getJarTaskName(MossyProjectConfigurationData data);
 
-	String getAWFileExtension();
+	String getAWFileExtension(MossyProjectConfigurationData data);
 }

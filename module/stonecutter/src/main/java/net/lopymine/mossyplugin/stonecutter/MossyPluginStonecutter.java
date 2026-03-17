@@ -3,6 +3,7 @@ package net.lopymine.mossyplugin.stonecutter;
 import dev.kikugie.stonecutter.controller.StonecutterControllerExtension;
 import dev.kikugie.stonecutter.data.StonecutterProject;
 import java.util.*;
+import lombok.experimental.ExtensionMethod;
 import net.lopymine.mossyplugin.common.MossyUtils;
 import net.lopymine.mossyplugin.stonecutter.tasks.*;
 import org.gradle.*;
@@ -14,6 +15,7 @@ import org.gradle.api.publish.PublishingExtension;
 import org.gradle.api.tasks.*;
 import org.jetbrains.annotations.NotNull;
 
+@ExtensionMethod(MossyUtils.class)
 public class MossyPluginStonecutter implements Plugin<Project> {
 
 	@Override
@@ -60,7 +62,17 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 
 			//
 
-			List<String> publishTasks = List.of("publishModrinth", "publishCurseforge");
+			List<String> publishTasks = new ArrayList<>();
+
+			String modrinthId = project.getProperty("modrinth_id");
+			String curseForgeId = project.getProperty("curseforge_id");
+
+			if (!modrinthId.equals("none")) {
+				publishTasks.add("publishModrinth");
+			}
+			if (!curseForgeId.equals("none")) {
+				publishTasks.add("publishCurseforge");
+			}
 
 			projects.forEach((version) -> {
 				tasks.register("publish+%s+%s".formatted(loader, version.getVersion()), (task) -> {

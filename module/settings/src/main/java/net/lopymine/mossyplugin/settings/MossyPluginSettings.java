@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 @Getter
 public class MossyPluginSettings implements Plugin<Settings> {
 
-	public static final String PLUGIN_VERSION = "2.1.8";
+	public static final String PLUGIN_VERSION = "3.0.0-beta.13";
 
 	public static final MossyLogger LOGGER = new MossyLogger("Settings");
 
@@ -78,7 +78,7 @@ public class MossyPluginSettings implements Plugin<Settings> {
 		loaderAndVersions.forEach((loader, versions) -> {
 			LoaderManager loaderManager = LoaderManager.of(loader);
 			for (String version : versions) {
-				projects.add(new MossyProject("%s-%s".formatted(loader, version), loader, version, loaderManager));
+				projects.add(new MossyProject("%s-%s".formatted(loader, version), loader, version, MossyUtils.substringBefore(version, "-"), loaderManager));
 			}
 		});
 

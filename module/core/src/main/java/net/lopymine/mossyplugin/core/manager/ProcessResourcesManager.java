@@ -2,6 +2,7 @@ package net.lopymine.mossyplugin.core.manager;
 
 import java.util.*;
 import lombok.experimental.ExtensionMethod;
+import net.lopymine.mossyplugin.common.MossyUtils;
 import net.lopymine.mossyplugin.core.MossyPluginCore;
 import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import net.lopymine.mossyplugin.core.extension.MossyCoreProcessResourcesExtension;
@@ -47,7 +48,13 @@ public class ProcessResourcesManager {
 		properties.putAll(project.getMossyProperties("dep"));
 		properties.putAll(extension.getCustomProperties());
 		properties.put("java", String.valueOf(plugin.getJavaVersionIndex()));
-		properties.put("minecraft", mcVersion);
+		int i = data.minecraftVersion().indexOf("-");
+		if (i != -1 && i != data.minecraftVersion().lastIndexOf("-")) {
+			properties.put("minecraft", "%s-%s".formatted(data.comparableMinecraftVersion(), MossyUtils.substringSince(data.minecraftVersion(), "-").replace("-", ".")));
+		} else {
+			properties.put("minecraft", data.minecraftVersion());
+		}
+
 		properties.put("fabric_api_id", project.getStonecutter().compare("1.19.1", mcVersion) >= 0 ? "fabric" : "fabric-api");
 		properties.put("mod_version", project.getVersion().toString());
 
@@ -64,6 +71,7 @@ public class ProcessResourcesManager {
 		properties.put("neoforge_trick_mixin_configs", String.join("\n", mixinConfigs.stream().map("[[mixins]]\nconfig = \"%s\"\n"::formatted).toList()));
 		properties.put("fabric_trick_side", project.getProperty("data.sides").toLowerCase(Locale.ROOT).replace("both", "*"));
 		properties.put("neoforge_trick_side", project.getProperty("data.sides").toUpperCase(Locale.ROOT));
+		properties.put("fabric_trick_accesswidener_id", "aws/%s.%s".formatted(data.projectName(), data.loaderManager().getAWFileExtension(data)));
 
 		properties.forEach(inputs::property);
 
@@ -80,7 +88,7 @@ public class ProcessResourcesManager {
 			details.expand(properties);
 		});
 
-		String e = data.loaderManager().getAWFileExtension();
+		String e = data.loaderManager().getAWFileExtension(data);
 		processResources.filesMatching("aws/*.*", (details) -> {
 			if (!details.getName().equals("%s.%s".formatted(project.getName(), e))) {
 				details.exclude();
