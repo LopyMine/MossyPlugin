@@ -2,6 +2,8 @@ package net.lopymine.mossyplugin.stonecutter;
 
 import dev.kikugie.stonecutter.controller.StonecutterControllerExtension;
 import dev.kikugie.stonecutter.data.StonecutterProject;
+import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 import lombok.experimental.ExtensionMethod;
 import net.lopymine.mossyplugin.common.MossyUtils;
@@ -23,6 +25,25 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 		Map<String, Project> childProjects = project.getChildProjects();
 		TaskContainer tasks = project.getTasks();
 		StonecutterControllerExtension controller = project.getExtensions().getByType(StonecutterControllerExtension.class);
+
+		String ciLoader = project.getProviders().gradleProperty("ci_loader").getOrNull();
+		if (ciLoader == null) {
+			File file = project.file("versions/active.txt");
+
+			if (!file.exists()) {
+				try {
+					@SuppressWarnings("unused")
+					boolean unused = file.createNewFile();
+					Files.write(file.toPath(), controller.getVcsVersion().getProject().getBytes());
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			}
+
+			controller.active(file);
+		} else {
+			controller.active(null);
+		}
 
 		Map<String, List<StonecutterProject>> loaderAndProjects = new HashMap<>();
 

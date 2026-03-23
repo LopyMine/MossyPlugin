@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 @Getter
 public class MossyPluginSettings implements Plugin<Settings> {
 
-	public static final String PLUGIN_VERSION = "3.0.0-beta.13";
+	public static final String PLUGIN_VERSION = "3.2.0";
 
 	public static final MossyLogger LOGGER = new MossyLogger("Settings");
 
@@ -36,6 +36,8 @@ public class MossyPluginSettings implements Plugin<Settings> {
 
 		List<String> loaders = getLoaders(gradleProperties);
 		Map<String, List<String>> loadersAndVersions = getLoadersAndVersions(gradleProperties, loaders);
+
+		GithubManager.apply(settings.getRootDir().toPath(), loaders);
 
 		loadersAndVersions.forEach((loader, versions) -> {
 			LOGGER.logModule(loader, "Found MC versions: [%s]".formatted(String.join(", ", versions)));
