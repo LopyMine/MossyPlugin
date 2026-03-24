@@ -1,32 +1,38 @@
 package net.lopymine.mossyplugin.core.manager;
 
 import java.io.*;
-import java.util.Arrays;
+import java.util.*;
 import lombok.experimental.ExtensionMethod;
 import me.modmuss50.mpp.*;
-import net.fabricmc.loom.task.RemapJarTask;
 import net.lopymine.mossyplugin.core.MossyPluginCore;
+import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
+import net.lopymine.mossyplugin.core.loader.LoaderManager;
 import net.lopymine.mossyplugin.core.util.MultiVersion;
 import org.codehaus.groovy.runtime.ResourceGroovyMethods;
 import org.gradle.api.*;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
+import org.gradle.jvm.tasks.Jar;
 import org.jetbrains.annotations.NotNull;
 
 @ExtensionMethod(MossyPluginCore.class)
 public class ModPublishManager {
 
-	public static void apply(@NotNull Project project, MossyPluginCore mossyPlugin, ModPublishExtension mpe) {
-		MultiVersion projectMultiVersion = mossyPlugin.getProjectMultiVersion();
-		String name = "[%s] %s v%s".formatted(projectMultiVersion.toVersionRange(), project.getProperty("data.mod_name"), project.getProperty("data.mod_version"));
+	public static void apply(@NotNull MossyProjectConfigurationData data, ModPublishExtension mpe) {
+		MossyPluginCore plugin = data.plugin();
+		String loaderName = data.loaderName();
+		LoaderManager loaderManager = data.loaderManager();
+		Project project = data.project();
 
-		String[] loaders = project.getProperty("loaders").split(" ");
+		MultiVersion projectMultiVersion = plugin.getProjectMultiVersion();
+		String name = "[%s/%s] %s v%s".formatted(loaderName, projectMultiVersion.toVersionRange(), project.getProperty("data.mod_name"), project.getProperty("data.mod_version"));
+
 		String modrinthId = project.getProperty("modrinth_id");
 		String curseForgeId = project.getProperty("curseforge_id");
-		String[] dependsEmbeds = project.getProperty("depends_embeds").split(" ");
-		String[] dependsRequires = project.getProperty("depends_requires").split(" ");
-		String[] dependsOptional = project.getProperty("depends_optional").split(" ");
-		String[] dependsIncompatible = project.getProperty("depends_incompatible").split(" ");
+		String[] dependsEmbeds = project.getProperty("%s.depends_embeds".formatted(loaderName)).split(" ");
+		String[] dependsRequires = project.getProperty("%s.depends_requires".formatted(loaderName)).split(" ");
+		String[] dependsOptional = project.getProperty("%s.depends_optional".formatted(loaderName)).split(" ");
+		String[] dependsIncompatible = project.getProperty("%s.depends_incompatible".formatted(loaderName)).split(" ");
 		String versionType = project.getProperty("version_type");
 		int maxJavaVersion = Integer.parseInt(project.getProperty("max_java_version"));
 		Boolean isForClient = Boolean.parseBoolean(project.getProperty("is_for_client"));
@@ -39,10 +45,10 @@ public class ModPublishManager {
 		boolean cannotUpload = testPublish || ((curseForgeApiKey == null && !curseForgeId.equals("none")) || (modrinthApiKey == null && !modrinthId.equals("none")));
 
 		mpe.getDisplayName().set(name);
-		mpe.getFile().set(getModFile(project));
-		mpe.getChangelog().set(getChangeLog(project));
+		mpe.getFile().set(getModFile(data));
+		mpe.getChangelog().set(getChangelog(project));
 		mpe.getType().set(getType(versionType));
-		mpe.getModLoaders().set(Arrays.asList(loaders));
+		mpe.getModLoaders().set(List.of(loaderName));
 		mpe.getDryRun().set(cannotUpload);
 
 		if (!curseForgeId.equals("none")) {
@@ -114,8 +120,8 @@ public class ModPublishManager {
 		MossyPluginCore.LOGGER.logModule("MPP","Dry Run: %s", mpe.getDryRun().get());
 	}
 
-	private static Provider<RegularFile> getModFile(@NotNull Project project) {
-		return ((RemapJarTask) project.getTasks().getByName("remapJar")).getArchiveFile();
+	private static Provider<RegularFile> getModFile(MossyProjectConfigurationData data) {
+		return ((Jar) data.project().getTasks().getByName(data.loaderManager().getJarTaskName(data))).getArchiveFile();
 	}
 
 	private static ReleaseType getType(String versionType) {
@@ -127,7 +133,7 @@ public class ModPublishManager {
 		};
 	}
 
-	private static String getChangeLog(@NotNull Project project) {
+	private static String getChangelog(@NotNull Project project) {
 		try {
 			File file = project.getRootFile("CHANGELOG.md");
 			if (file.exists()) {

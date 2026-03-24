@@ -11,16 +11,25 @@ public class MossyCoreDependenciesExtension {
 	String minecraft;
 
 	@Input
-	String mappings;
-
-	@Input
 	String fabricApi;
 
 	@Input
 	String fabricLoader;
 
 	@Input
+	String neoForge;
+
+	@Input
+	String forge;
+
+	@Input
+	String parchment;
+
+	@Input
 	String lombok;
+
+	@Input
+	String disableMixinAp;
 
 	@Nested
 	MossyCoreAdditionalDependencies additional = new MossyCoreAdditionalDependencies();
