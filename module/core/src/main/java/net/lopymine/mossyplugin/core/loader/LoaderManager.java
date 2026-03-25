@@ -1,5 +1,6 @@
 package net.lopymine.mossyplugin.core.loader;
 
+import java.util.*;
 import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import net.lopymine.mossyplugin.core.extension.MossyCoreDependenciesExtension;
 import org.gradle.api.file.FileCopyDetails;
@@ -32,4 +33,6 @@ public interface LoaderManager {
 	String getJarTaskName(MossyProjectConfigurationData data);
 
 	String getAWFileExtension(MossyProjectConfigurationData data);
+
+	Map<String, String> getLoaderConfigurations(List<String> configurations, MossyProjectConfigurationData data);
 }

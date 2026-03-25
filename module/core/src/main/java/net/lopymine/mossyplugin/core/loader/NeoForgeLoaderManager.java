@@ -1,6 +1,6 @@
 package net.lopymine.mossyplugin.core.loader;
 
-import java.util.List;
+import java.util.*;
 import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import net.lopymine.mossyplugin.core.extension.MossyCoreDependenciesExtension;
 import net.lopymine.mossyplugin.core.manager.neoforge.NeoForgeManager;
@@ -66,5 +66,14 @@ public class NeoForgeLoaderManager implements LoaderManager {
 			}
 		}
 		return excluded;
+	}
+
+	@Override
+	public Map<String, String> getLoaderConfigurations(List<String> configurations, MossyProjectConfigurationData data) {
+		Map<String, String> map = new HashMap<>();
+		for (String s : configurations) {
+			map.put(s, s.equals("include") ? "jarJar" : s);
+		}
+		return map;
 	}
 }

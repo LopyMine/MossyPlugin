@@ -1,6 +1,7 @@
 package net.lopymine.mossyplugin.core.manager;
 
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.function.Consumer;
 import lombok.experimental.ExtensionMethod;
 import net.lopymine.mossyplugin.common.MossyUtils;
@@ -11,6 +12,7 @@ import net.lopymine.mossyplugin.core.extension.MossyCoreAdditionalDependencies.A
 import net.lopymine.mossyplugin.core.loader.LoaderManager;
 import net.neoforged.moddevgradle.legacyforge.dsl.ObfuscationExtension;
 import org.gradle.api.*;
+import org.gradle.api.artifacts.*;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.artifacts.repositories.*;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +26,21 @@ public class DependenciesManager {
 
 		String minecraft = extension.getMinecraft();
 		String lombok = extension.getLombok();
+
+		ConfigurationContainer configurations = project.getConfigurations();
+
+		Map<String, String> loaderList = loaderManager.getLoaderConfigurations(
+				List.of("include", "api", "implementation", "compileOnly", "runtimeOnly"),
+				data
+		);
+
+		for (Entry<String, String> entry : loaderList.entrySet()) {
+			String originalName = entry.getKey();
+			String loaderName = entry.getValue();
+			String name = "mossy" + String.valueOf(originalName.charAt(0)).toUpperCase(Locale.ROOT) + originalName.substring(1);
+			Configuration created = configurations.create(name);
+			configurations.named(loaderName).configure((action) -> action.extendsFrom(created));
+		}
 
 		DependencyHandler dependencies = project.getDependencies();
 		loaderManager.applyDependencies(data, extension);

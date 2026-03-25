@@ -26,9 +26,11 @@ public class NeoForgeManager {
 		UUID playerUuid = MossyUtils.getPlayerUuid(personalProperties);
 		Object quickPlayWorld = personalProperties.get("quick_play_world");
 
-		Parchment parchment = extension.getParchment();
-		parchment.getMappingsVersion().set(dependencies.getParchment());
-		parchment.getMinecraftVersion().set(dependencies.getMinecraft());
+		if (data.project().getStonecutter().eval(data.comparableMinecraftVersion(), "<26.1")) {
+			Parchment parchment = extension.getParchment();
+			parchment.getMappingsVersion().set(dependencies.getParchment());
+			parchment.getMinecraftVersion().set(dependencies.getMinecraft());
+		}
 
 		extension.getValidateAccessTransformers().set(true);
 		extension.getAccessTransformers().from("../../src/main/resources/aws/%s-%s.cfg".formatted(data.loaderName(), data.minecraftVersion()));

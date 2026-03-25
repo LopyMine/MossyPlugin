@@ -126,4 +126,21 @@ public class ForgeLoaderManager implements LoaderManager {
 		}
 		return excluded;
 	}
+
+	@Override
+	public Map<String, String> getLoaderConfigurations(List<String> configurations, MossyProjectConfigurationData data) {
+		Map<String, String> map = new HashMap<>();
+		for (String s : configurations) {
+			if (s.equals("include")) {
+				map.put(s, "jarJar");
+				continue;
+			}
+			if (s.equals("implementation")) {
+				map.put(s, this.getModDependenciesImplementationMethod(data));
+				continue;
+			}
+			map.put(s, s);
+		}
+		return map;
+	}
 }

@@ -14,15 +14,15 @@ public class ForgeLoaderManager implements LoaderManager {
 	}
 
 	@Override
-	public void fillGPWithProperties(StringBuilder builder, String minecraft) {
+	public void fillGPWithProperties(StringBuilder builder, String minecraft, StonecutterSettingsExtension stonecutter) {
 		builder.append("# Forge Properties, check https://files.minecraftforge.net/net/minecraftforge/forge/index_%s.html\n".formatted(minecraft));
 		for (String id : List.of("forge", "parchment")) {
-			builder.append("build.%s=%s\n".formatted(id, this.getGPUpdatedProperty(id, minecraft)));
+			builder.append("build.%s=%s\n".formatted(id, this.getGPUpdatedProperty(id, minecraft, stonecutter)));
 		}
 	}
 
 	@Override
-	public String getGPUpdatedProperty(String id, String minecraft) {
+	public String getGPUpdatedProperty(String id, String minecraft, StonecutterSettingsExtension stonecutter) {
 		return switch (id) {
 			case "forge" -> ForgeDependenciesAPI.getForgeVersion(minecraft);
 			case "parchment" -> ForgeCommonDependenciesAPI.getParchmentVersion(minecraft);

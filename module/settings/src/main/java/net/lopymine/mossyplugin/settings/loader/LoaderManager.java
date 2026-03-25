@@ -17,9 +17,9 @@ public interface LoaderManager {
 		}
 	}
 
-	void fillGPWithProperties(StringBuilder builder, String minecraft);
+	void fillGPWithProperties(StringBuilder builder, String minecraft, StonecutterSettingsExtension stonecutter);
 
-	String getGPUpdatedProperty(String id, String minecraft);
+	String getGPUpdatedProperty(String id, String minecraft, StonecutterSettingsExtension stonecutter);
 
 	void fillAWWillExampleText(FileWriter writer, String minecraft, StonecutterSettingsExtension stonecutter) throws IOException;
 

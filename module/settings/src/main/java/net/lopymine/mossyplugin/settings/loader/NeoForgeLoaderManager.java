@@ -2,7 +2,7 @@ package net.lopymine.mossyplugin.settings.loader;
 
 import dev.kikugie.stonecutter.settings.StonecutterSettingsExtension;
 import java.io.FileWriter;
-import java.util.List;
+import java.util.*;
 import net.lopymine.mossyplugin.settings.api.*;
 
 public class NeoForgeLoaderManager implements LoaderManager {
@@ -14,18 +14,30 @@ public class NeoForgeLoaderManager implements LoaderManager {
 	}
 
 	@Override
-	public void fillGPWithProperties(StringBuilder builder, String minecraft) {
+	public void fillGPWithProperties(StringBuilder builder, String minecraft, StonecutterSettingsExtension stonecutter) {
 		builder.append("# NeoForge Properties, check https://neoforged.net/\n");
-		for (String id : List.of("neoforge", "parchment")) {
-			builder.append("build.%s=%s\n".formatted(id, this.getGPUpdatedProperty(id, minecraft)));
+
+		List<String> list = new ArrayList<>();
+		list.add("neoforge");
+		if (!stonecutter.eval(minecraft, ">=26.1")) {
+			list.add("parchment");
+		}
+
+		for (String id : list) {
+			builder.append("build.%s=%s\n".formatted(id, this.getGPUpdatedProperty(id, minecraft, stonecutter)));
 		}
 	}
 
 	@Override
-	public String getGPUpdatedProperty(String id, String minecraft) {
+	public String getGPUpdatedProperty(String id, String minecraft, StonecutterSettingsExtension stonecutter) {
 		return switch (id) {
 			case "neoforge" -> NeoForgeDependenciesAPI.getNeoForgeVersion(minecraft);
-			case "parchment" -> ForgeCommonDependenciesAPI.getParchmentVersion(minecraft);
+			case "parchment" -> {
+				if (stonecutter.eval(minecraft, ">=26.1")) {
+					yield  "unknown";
+				}
+				yield ForgeCommonDependenciesAPI.getParchmentVersion(minecraft);
+			}
 			default -> "unknown";
 		};
 	}

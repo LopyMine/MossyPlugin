@@ -14,15 +14,15 @@ public class FabricLoaderManager implements LoaderManager {
 	}
 
 	@Override
-	public void fillGPWithProperties(StringBuilder builder, String minecraft) {
+	public void fillGPWithProperties(StringBuilder builder, String minecraft, StonecutterSettingsExtension stonecutter) {
 		builder.append("# Fabric Properties, check https://fabricmc.net/develop/\n");
 		for (String id : List.of("fabric_api")) {
-			builder.append("build.%s=%s\n".formatted(id, this.getGPUpdatedProperty(id, minecraft)));
+			builder.append("build.%s=%s\n".formatted(id, this.getGPUpdatedProperty(id, minecraft, stonecutter)));
 		}
 	}
 
 	@Override
-	public String getGPUpdatedProperty(String id, String minecraft) {
+	public String getGPUpdatedProperty(String id, String minecraft, StonecutterSettingsExtension stonecutter) {
 		return switch (id) {
 			case "fabric_api" -> ModrinthDependenciesAPI.getVersion("fabric-api", minecraft, "fabric");
 			default -> "unknown";

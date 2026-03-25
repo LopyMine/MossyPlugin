@@ -1,6 +1,7 @@
 package net.lopymine.mossyplugin.core.loader;
 
 import dev.kikugie.stonecutter.build.StonecutterBuildExtension;
+import java.util.*;
 import lombok.experimental.ExtensionMethod;
 import net.fabricmc.loom.api.LoomGradleExtensionAPI;
 import net.lopymine.mossyplugin.core.MossyPluginCore;
@@ -95,5 +96,27 @@ public class FabricLoaderManager implements LoaderManager {
 	private static boolean isRemapVersion(MossyProjectConfigurationData data) {
 		StonecutterBuildExtension stonecutter = data.project().getStonecutter();
 		return stonecutter.eval(data.comparableMinecraftVersion(), "<26.1");
+	}
+
+	@Override
+	public Map<String, String> getLoaderConfigurations(List<String> configurations, MossyProjectConfigurationData data) {
+		Map<String, String> map = new HashMap<>();
+
+		StonecutterBuildExtension stonecutter = data.project().getStonecutter();
+		if (stonecutter.eval(data.comparableMinecraftVersion(), ">=26.1")) {
+			for (String s : configurations) {
+				map.put(s, s);
+			}
+			return map;
+		}
+
+		for (String s : configurations) {
+			if (s.equals("include")) {
+				map.put(s, s);
+				continue;
+			}
+			map.put(s, "mod" + String.valueOf(s.charAt(0)).toUpperCase(Locale.ROOT) + s.substring(1));
+		}
+		return map;
 	}
 }

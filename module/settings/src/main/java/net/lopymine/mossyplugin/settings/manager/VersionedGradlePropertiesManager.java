@@ -1,5 +1,6 @@
 package net.lopymine.mossyplugin.settings.manager;
 
+import dev.kikugie.stonecutter.settings.StonecutterSettingsExtension;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
@@ -18,6 +19,7 @@ public class VersionedGradlePropertiesManager {
 	public static void apply(@NotNull Settings settings, Properties gradleProperties, List<MossyProject> projects, List<String> additionalDependencies) {
 		Path path = settings.getRootDir().toPath();
 
+		StonecutterSettingsExtension stonecutter = settings.getExtensions().getByType(StonecutterSettingsExtension.class);
 		for (MossyProject project : projects) {
 			try {
 				createGradleProperties(
@@ -28,7 +30,8 @@ public class VersionedGradlePropertiesManager {
 						additionalDependencies,
 						gradleProperties,
 						(modId) -> ModrinthDependenciesAPI.getVersion(modId, project.minecraftVersion(), project.loaderName()),
-						project.loaderManager()
+						project.loaderManager(),
+						stonecutter
 				);
 			} catch (Exception e) {
 				throw new RuntimeException("Failed to create versioned gradle properties for " + project.projectName() + ", reason: " + e.getMessage(), e);
@@ -44,7 +47,8 @@ public class VersionedGradlePropertiesManager {
 			List<String> additionalDependencies,
 			Properties rootGradleProperties,
 			Function<String, String> dependResolver,
-			LoaderManager loaderManager
+			LoaderManager loaderManager,
+			StonecutterSettingsExtension stonecutter
 	) throws IOException {
 		File gradlePropertiesFile = getOrCreateGradlePropertiesFile(rootPath, projectName);
 		if (gradlePropertiesFile == null) {
@@ -99,7 +103,7 @@ public class VersionedGradlePropertiesManager {
 			builder.append("# Tip: You can set any dependency value to \"[UPDATE]\"\n");
 			builder.append("# and reload Gradle to update only it's value.\n\n");
 
-			loaderManager.fillGPWithProperties(builder, minecraft);
+			loaderManager.fillGPWithProperties(builder, minecraft, stonecutter);
 
 			if (!additionalDependencies.isEmpty()) {
 				builder.append("\n");
@@ -126,7 +130,7 @@ public class VersionedGradlePropertiesManager {
 						dependResolver.apply(dependencyId)
 						:
 						key.startsWith("build.") ?
-								loaderManager.getGPUpdatedProperty(dependencyId, minecraft)
+								loaderManager.getGPUpdatedProperty(dependencyId, minecraft, stonecutter)
 								:
 								null;
 				if (updatedValue == null) {
