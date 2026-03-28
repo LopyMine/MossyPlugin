@@ -1,5 +1,6 @@
 package net.lopymine.mossyplugin.core.loader;
 
+import java.lang.reflect.Method;
 import java.util.*;
 import lombok.experimental.ExtensionMethod;
 import net.lopymine.mossyplugin.core.MossyPluginCore;
@@ -7,7 +8,9 @@ import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import net.lopymine.mossyplugin.core.extension.MossyCoreDependenciesExtension;
 import net.lopymine.mossyplugin.core.manager.neoforge.NeoForgeManager;
 import net.neoforged.moddevgradle.legacyforge.dsl.*;
-import org.gradle.api.Project;
+import net.neoforged.moddevgradle.legacyforge.internal.MinecraftMappings;
+import org.gradle.api.*;
+import org.gradle.api.artifacts.*;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.file.FileCopyDetails;
 import org.gradle.api.plugins.*;
@@ -129,6 +132,7 @@ public class ForgeLoaderManager implements LoaderManager {
 
 	@Override
 	public Map<String, String> getLoaderConfigurations(List<String> configurations, MossyProjectConfigurationData data) {
+
 		Map<String, String> map = new HashMap<>();
 		for (String s : configurations) {
 			if (s.equals("include")) {
@@ -138,5 +142,58 @@ public class ForgeLoaderManager implements LoaderManager {
 			map.put(s, "mod" + String.valueOf(s.charAt(0)).toUpperCase(Locale.ROOT) + s.substring(1));
 		}
 		return map;
+	}
+
+
+	@SuppressWarnings("UnstableApiUsage")
+	@Override
+	public Configuration registerCustomConfiguration(@NotNull MossyProjectConfigurationData data, String name, String originalName, String loaderName) {
+		Project project = data.project();
+		Configuration parent = project.getConfigurations().getByName(loaderName);
+		MinecraftMappings namedMappings = project.getObjects().named(MinecraftMappings.class, "named");
+
+		return project.getConfigurations().create(name, (spec) -> {
+			spec.setDescription("Configuration for dependencies that needs to be remapped");
+			spec.setCanBeConsumed(false);
+			spec.setCanBeResolved(false);
+			spec.setTransitive(false);
+			spec.withDependencies((dependencies) -> dependencies.forEach((dep) -> {
+				switch (dep) {
+					case ExternalModuleDependency externalModuleDependency -> {
+						project.getDependencies().constraints((constraints) -> {
+							String var10001 = parent.getName();
+							String var10002 = externalModuleDependency.getGroup();
+							constraints.add(var10001, var10002 + ":" + externalModuleDependency.getName() + ":" + externalModuleDependency.getVersion(), (c) -> c.attributes((a) -> a.attribute(MinecraftMappings.ATTRIBUTE, namedMappings)));
+						});
+						externalModuleDependency.setTransitive(false);
+					}
+					case FileCollectionDependency fileCollectionDependency -> project.getDependencies().constraints((constraints) -> constraints.add(parent.getName(), fileCollectionDependency.getFiles(), (c) -> c.attributes((a) -> a.attribute(MinecraftMappings.ATTRIBUTE, namedMappings))));
+					case ProjectDependency projectDependency -> {
+						project.getDependencies().constraints((constraints) -> constraints.add(parent.getName(), getProjectDependencyProject(project, projectDependency), (c) -> c.attributes((a) -> a.attribute(MinecraftMappings.ATTRIBUTE, namedMappings))));
+						projectDependency.setTransitive(false);
+					}
+					default -> throw new IllegalStateException("Unexpected value: " + dep);
+				}
+
+			}));
+		});
+	}
+
+	private static Project getProjectDependencyProject(Project project, ProjectDependency projectDependency) {
+		try {
+			Class<ProjectDependency> clazz = ProjectDependency.class;
+
+			try {
+				Method getPathMethod = clazz.getMethod("getPath");
+				String path = (String)getPathMethod.invoke(projectDependency);
+				return project.project(path);
+			} catch (NoSuchMethodException var5) {
+				@SuppressWarnings("all")
+				Method getDependencyProjectMethod = clazz.getMethod("getDependencyProject");
+				return (Project)getDependencyProjectMethod.invoke(projectDependency);
+			}
+		} catch (ReflectiveOperationException exception) {
+			throw new RuntimeException("Failed to access project of ProjectDependency", exception);
+		}
 	}
 }

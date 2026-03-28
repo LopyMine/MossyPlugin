@@ -34,7 +34,8 @@ public class DependenciesManager {
 			String originalName = entry.getKey();
 			String loaderName = entry.getValue();
 			String name = "mossy" + String.valueOf(originalName.charAt(0)).toUpperCase(Locale.ROOT) + originalName.substring(1);
-			Configuration created = configurations.create(name);
+
+			Configuration created = loaderManager.registerCustomConfiguration(data, name, originalName, loaderName);
 			configurations.named(loaderName).configure((action) -> action.extendsFrom(created));
 		}
 	}
