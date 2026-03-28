@@ -10,7 +10,6 @@ import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import net.lopymine.mossyplugin.core.extension.*;
 import net.lopymine.mossyplugin.core.extension.MossyCoreAdditionalDependencies.AdditionalDependencyOverride;
 import net.lopymine.mossyplugin.core.loader.LoaderManager;
-import net.neoforged.moddevgradle.legacyforge.dsl.ObfuscationExtension;
 import org.gradle.api.*;
 import org.gradle.api.artifacts.*;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
@@ -20,12 +19,9 @@ import org.jetbrains.annotations.NotNull;
 @ExtensionMethod(MossyPluginCore.class)
 public class DependenciesManager {
 
-	private static void addDependencies(@NotNull MossyProjectConfigurationData data, MossyCoreDependenciesExtension extension) {
+	private static void addCustomConfigurations(@NotNull MossyProjectConfigurationData data) {
 		Project project = data.project();
 		LoaderManager loaderManager = data.loaderManager();
-
-		String minecraft = extension.getMinecraft();
-		String lombok = extension.getLombok();
 
 		ConfigurationContainer configurations = project.getConfigurations();
 
@@ -41,6 +37,14 @@ public class DependenciesManager {
 			Configuration created = configurations.create(name);
 			configurations.named(loaderName).configure((action) -> action.extendsFrom(created));
 		}
+	}
+
+	private static void addDependencies(@NotNull MossyProjectConfigurationData data, MossyCoreDependenciesExtension extension) {
+		Project project = data.project();
+		LoaderManager loaderManager = data.loaderManager();
+
+		String minecraft = extension.getMinecraft();
+		String lombok = extension.getLombok();
 
 		DependencyHandler dependencies = project.getDependencies();
 		loaderManager.applyDependencies(data, extension);
@@ -144,6 +148,8 @@ public class DependenciesManager {
 		project.getExtensions().create("mossyDependencies", MossyCoreDependenciesExtension.class);
 
 		addRepositories(project);
+		addCustomConfigurations(data);
+
 		project.getGradle().addProjectEvaluationListener(new ProjectEvaluationListener() {
 			@Override
 			public void beforeEvaluate(@NotNull Project project) {

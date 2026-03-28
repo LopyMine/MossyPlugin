@@ -135,11 +135,7 @@ public class ForgeLoaderManager implements LoaderManager {
 				map.put(s, "jarJar");
 				continue;
 			}
-			if (s.equals("implementation")) {
-				map.put(s, this.getModDependenciesImplementationMethod(data));
-				continue;
-			}
-			map.put(s, s);
+			map.put(s, "mod" + String.valueOf(s.charAt(0)).toUpperCase(Locale.ROOT) + s.substring(1));
 		}
 		return map;
 	}
