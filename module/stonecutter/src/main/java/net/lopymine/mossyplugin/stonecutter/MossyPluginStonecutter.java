@@ -239,11 +239,13 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 				if (version.contains("forge")) {
 					task.delete(childProjects.get(version).file("build/moddev"));
 				} else {
-					String s = version
-							.replace(".", "_")
+					String d = version.replace("fabric-", "");
+					String s = d.replace(".", "_")
 							.replace("-", "_");
-					task.delete(project.file(".idea/runConfigurations/Minecraft_Client___%s__%s.xml".formatted(s, version)));
-					task.delete(project.file(".idea/runConfigurations/Minecraft_Server___%s__%s.xml".formatted(s, version)));
+					String formatted = ".idea/runConfigurations/fabric___%s___server_fabric-%s.xml".formatted(s, d);
+					task.delete(project.file(formatted));
+					String formatted1 = ".idea/runConfigurations/fabric___%s___client_fabric-%s.xml".formatted(s, d);
+					task.delete(project.file(formatted1));
 				}
 			}
 

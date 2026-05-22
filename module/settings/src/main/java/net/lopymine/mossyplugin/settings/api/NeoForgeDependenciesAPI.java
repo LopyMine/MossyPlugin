@@ -1,5 +1,7 @@
 package net.lopymine.mossyplugin.settings.api;
 
+import net.lopymine.mossyplugin.settings.MossyPluginSettings;
+
 public class NeoForgeDependenciesAPI {
 
 	public static String getNeoForgeVersion(String minecraft) {
@@ -7,7 +9,8 @@ public class NeoForgeDependenciesAPI {
 		String minor;
 		String[] split = minecraft.split("\\.");
 		if (split.length == 1) {
-			throw new RuntimeException("Unsupported Minecraft Version \"%s\"".formatted(minecraft));
+			MossyPluginSettings.LOGGER.log("Unsupported Minecraft Version \"%s\"".formatted(minecraft));
+			return "unknown";
 		}
 
 		if (minecraft.startsWith("1.")) {
@@ -23,7 +26,9 @@ public class NeoForgeDependenciesAPI {
 					.get("version")
 					.getAsString();
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			MossyPluginSettings.LOGGER.log("Failed to get neoforge version!");
+			e.printStackTrace(System.out);
+			return "unknown";
 		}
 	}
 

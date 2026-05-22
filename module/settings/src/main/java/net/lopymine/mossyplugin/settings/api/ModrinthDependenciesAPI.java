@@ -22,6 +22,7 @@ public class ModrinthDependenciesAPI {
 			e.printStackTrace(System.out);
 			return "unknown";
 		} catch (Exception e) {
+			MossyPluginSettings.LOGGER.log("Failed to get version from Modrinth project with id \"%s\"", modId);
 			e.printStackTrace(System.out);
 			return "unknown";
 		}

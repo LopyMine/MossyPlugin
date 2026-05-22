@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 @ExtensionMethod(MossyPluginCore.class)
 public class NeoForgeManager {
 
-	public static void apply(@NotNull MossyProjectConfigurationData data, ModDevExtension extension, MossyCoreDependenciesExtension dependencies) {
+	public static void apply(@NotNull MossyProjectConfigurationData data, ModDevExtension extension, MossyCoreDependenciesExtension dependencies, String platform) {
 		Project project = data.project();
 
 		Properties personalProperties = project.getPersonalProperties();
@@ -59,7 +59,11 @@ public class NeoForgeManager {
 					addProgramArg(altClient, "--username", entry.getKey());
 					addProgramArg(altClient, "--uuid", entry.getValue());
 					addProgramArg(altClient, "--quickPlaySingleplayer", quickPlayWorld);
+
+					altClient.getIdeName().set("%s / %s / client / %s".formatted(platform, data.minecraftVersion(), entry.getKey()));
 				}
+
+				client.getIdeName().set("%s / %s / %s".formatted(platform, data.minecraftVersion(), "client"));
 			}
 
 			if (createServer) {
@@ -67,6 +71,7 @@ public class NeoForgeManager {
 				server.server();
 				server.programArgument("--nogui");
 				server.getGameDirectory().set(runs.resolve("server").toFile());
+				server.getIdeName().set("%s / %s / %s".formatted(platform, data.minecraftVersion(), "server"));
 			}
 		});
 

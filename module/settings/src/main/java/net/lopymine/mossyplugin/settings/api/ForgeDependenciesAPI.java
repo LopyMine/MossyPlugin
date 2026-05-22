@@ -1,5 +1,7 @@
 package net.lopymine.mossyplugin.settings.api;
 
+import net.lopymine.mossyplugin.settings.MossyPluginSettings;
+
 public class ForgeDependenciesAPI {
 
 	public static String getForgeVersion(String minecraft) {
@@ -9,7 +11,9 @@ public class ForgeDependenciesAPI {
 					.get("version")
 					.getAsString();
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			MossyPluginSettings.LOGGER.log("Failed to find forge version!");
+			e.printStackTrace(System.out);
+			return "unknown";
 		}
 	}
 

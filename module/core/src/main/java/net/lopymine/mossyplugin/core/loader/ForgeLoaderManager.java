@@ -40,7 +40,7 @@ public class ForgeLoaderManager implements LoaderManager {
 		ExtensionContainer extensions = project.getExtensions();
 		LegacyForgeExtension extension = extensions.getByType(LegacyForgeExtension.class);
 		extension.setVersion(dependencies.getForge());
-		NeoForgeManager.apply(data, extension, dependencies);
+		NeoForgeManager.apply(data, extension, dependencies, "forge");
 
 		String mixinExtrasVersion = project.getProperty("base.mixinextras_version");
 		String mixinVersion = project.getProperty("base.mixin_version");

@@ -57,20 +57,27 @@ public class LoomManager {
 				addProgramArg(runConfig, "--quickPlaySingleplayer", quickPlayWorld);
 				addVMArg(runConfig, "-javaagent", pathToSpongeMixin);
 			}
- 		}
+
+			runConfig.getAppendProjectPathToConfigName().set(false);
+			runConfig.setName("fabric / %s / %s".formatted(data.minecraftVersion(), runConfig.getEnvironment()));
+			runConfig.getAppendProjectPathToConfigName().set(false);
+		}
 
 		RunConfigSettings client = runConfigs.getByName("client");
 		Path runs = project.getRootProject().getProjectDir().toPath().resolve("runs");
 
 		for (Entry<String, UUID> entry : altAccounts.entrySet()) {
-			String runName = "client_" + entry.getKey();
-			RunConfigSettings altClient = runConfigs.create(runName);
+			RunConfigSettings altClient = runConfigs.create("fabric-%s-client-%s".formatted(data.minecraftVersion(), entry.getKey()));
 			altClient.inherit(client);
 
-			altClient.setRunDir(runs.resolve(runName).toAbsolutePath().toString());
+			altClient.setRunDir(runs.resolve("client_" + entry.getKey()).toAbsolutePath().toString());
 			addProgramArg(altClient, "--username", entry.getKey());
 			addProgramArg(altClient, "--uuid", entry.getValue());
 			addProgramArg(altClient, "--quickPlaySingleplayer", quickPlayWorld);
+
+			altClient.getAppendProjectPathToConfigName().set(false);
+			altClient.setName("fabric / %s / client / %s".formatted(data.minecraftVersion(), entry.getKey()));
+			altClient.getAppendProjectPathToConfigName().set(false);
 		}
 	}
 

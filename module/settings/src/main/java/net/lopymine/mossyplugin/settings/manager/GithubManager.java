@@ -2,6 +2,7 @@ package net.lopymine.mossyplugin.settings.manager;
 
 import java.nio.file.*;
 import java.util.*;
+import net.lopymine.mossyplugin.settings.MossyPluginSettings;
 
 public class GithubManager {
 
@@ -20,7 +21,8 @@ public class GithubManager {
 
 			Files.write(path, content.getBytes());
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			MossyPluginSettings.LOGGER.log("Failed to sync github build workflow!");
+			e.printStackTrace(System.out);
 		}
 	}
 

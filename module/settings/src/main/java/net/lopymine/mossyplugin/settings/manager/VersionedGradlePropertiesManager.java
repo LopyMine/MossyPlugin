@@ -34,7 +34,9 @@ public class VersionedGradlePropertiesManager {
 						stonecutter
 				);
 			} catch (Exception e) {
-				throw new RuntimeException("Failed to create versioned gradle properties for " + project.projectName() + ", reason: " + e.getMessage(), e);
+				MossyPluginSettings.LOGGER.log("Failed to create versioned gradle properties for " + project.projectName() + ", reason: " + e.getMessage(), e);
+				e.printStackTrace(System.out);
+				return;
 			}
 		}
 	}
@@ -192,8 +194,10 @@ public class VersionedGradlePropertiesManager {
 				return null;
 			}
 			return gradlePropertiesFile;
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+		} catch (Exception e) {
+			MossyPluginSettings.LOGGER.log("Failed to create gradle.properties file!");
+			e.printStackTrace(System.out);
+			return null;
 		}
 	}
 	

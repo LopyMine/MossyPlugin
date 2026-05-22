@@ -29,7 +29,7 @@ public class NeoForgeLoaderManager implements LoaderManager {
 	public void applyDependencies(@NotNull MossyProjectConfigurationData data, MossyCoreDependenciesExtension dependencies) {
 		NeoForgeExtension extension = data.project().getExtensions().getByType(NeoForgeExtension.class);
 		extension.setVersion(dependencies.getNeoForge());
-		NeoForgeManager.apply(data, extension, dependencies);
+		NeoForgeManager.apply(data, extension, dependencies, "neoforge");
 	}
 
 	@Override

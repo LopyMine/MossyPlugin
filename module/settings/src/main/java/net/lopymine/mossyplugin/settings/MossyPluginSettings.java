@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 @Getter
 public class MossyPluginSettings implements Plugin<Settings> {
 
-	public static final String PLUGIN_VERSION = "3.6.0";
+	public static final String PLUGIN_VERSION = "3.7.0-beta.19";
 
 	public static final MossyLogger LOGGER = new MossyLogger("Settings");
 
@@ -45,7 +45,6 @@ public class MossyPluginSettings implements Plugin<Settings> {
 
 		StonecutterManager.apply(settings, loadersAndVersions);
 		List<MossyProject> projects = getMossyProjects(loadersAndVersions);
-
 		AccessWidenerManager.apply(settings, projects);
 		VersionedGradlePropertiesManager.apply(settings, gradleProperties, projects, additionalDependencies);
 	}
@@ -96,7 +95,8 @@ public class MossyPluginSettings implements Plugin<Settings> {
 		try (FileReader reader = new FileReader(project.toPath().resolve("gradle.properties").toFile())) {
 			properties.load(reader);
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			MossyPluginSettings.LOGGER.log("Failed to read gradle.properties from \"%s\"!".formatted(project.getAbsolutePath()));
+			e.printStackTrace(System.out);
 		}
 		return properties;
 	}

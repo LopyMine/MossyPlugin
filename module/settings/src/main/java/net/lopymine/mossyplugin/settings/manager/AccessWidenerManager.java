@@ -28,7 +28,9 @@ public class AccessWidenerManager {
 		try (FileWriter writer = new FileWriter(awFile)) {
 			project.loaderManager().fillAWWillExampleText(writer, project.comparableMinecraftVersion(), stonecutter);
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			MossyPluginSettings.LOGGER.log("Failed to create AW for \"%s\"!".formatted(project.projectName()));
+			e.printStackTrace(System.out);
+			return;
 		}
 
 		MossyPluginSettings.LOGGER.log("Successfully created AW for " + project.projectName());
@@ -52,11 +54,13 @@ public class AccessWidenerManager {
 
 		try {
 			if (!versionedAWFile.createNewFile()) {
-				MossyPluginSettings.LOGGER.log("Failed to create AW file for " + projectName);
+				MossyPluginSettings.LOGGER.log("[1] Failed to create AW file for " + projectName);
 				return null;
 			}
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			MossyPluginSettings.LOGGER.log("[2] Failed to create AW file for " + projectName);
+			e.printStackTrace(System.out);
+			return null;
 		}
 
 		return versionedAWFile;

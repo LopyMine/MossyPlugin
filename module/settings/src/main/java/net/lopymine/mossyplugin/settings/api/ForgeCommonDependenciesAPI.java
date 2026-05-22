@@ -2,6 +2,7 @@ package net.lopymine.mossyplugin.settings.api;
 
 import com.google.gson.JsonElement;
 import java.util.*;
+import net.lopymine.mossyplugin.settings.MossyPluginSettings;
 
 public class ForgeCommonDependenciesAPI {
 
@@ -23,7 +24,9 @@ public class ForgeCommonDependenciesAPI {
 			Collections.sort(list);
 			return list.get(list.size()-1);
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			MossyPluginSettings.LOGGER.log("Failed to find parchment version!");
+			e.printStackTrace(System.out);
+			return "unknown";
 		}
 	}
 
