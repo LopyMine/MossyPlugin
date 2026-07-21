@@ -5,6 +5,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.Optional;
 import lombok.Getter;
 import me.modmuss50.mpp.ModPublishExtension;
 import net.lopymine.mossyplugin.common.*;
@@ -101,7 +102,12 @@ public class MossyPluginCore implements Plugin<Project> {
 
 		project.getTasks().register("rebuildLibs", Delete.class, task -> {
 			task.setGroup("build");
-			String modName = MossyUtils.getProperty(project, "data.mod_name").replace(" ", "");
+			String modName = (
+					Optional.ofNullable(project.getProperties().get("data.mod_jar_name"))
+						.map(Object::toString)
+						.orElse(MossyUtils.getProperty(project, "data.mod_name").replace(" ", ""))
+			).replaceAll("[/\\\\:<>\",?*|]", "");
+
 			String version = project.getVersion().toString();
 
 			String jarFileName = "libs/%s-%s.jar".formatted(modName, version);
@@ -159,7 +165,12 @@ public class MossyPluginCore implements Plugin<Project> {
 		project.setGroup(mavenGroup);
 
 		BasePluginExtension base = project.getExtensions().getByType(BasePluginExtension.class);
-		base.getArchivesName().set(MossyUtils.getProperty(project, "data.mod_name").replace(" ", ""));
+		String modName = (
+				Optional.ofNullable(project.getProperties().get("data.mod_jar_name"))
+						.map(Object::toString)
+						.orElse(MossyUtils.getProperty(project, "data.mod_name").replace(" ", ""))
+		).replaceAll("[/\\\\:<>\",?*|]", "");
+		base.getArchivesName().set(modName);
 
 		Jar jar = (Jar) project.getTasks().getByName("jar");
 		jar.getArchiveBaseName().set(base.getArchivesName().get());
@@ -203,17 +214,26 @@ public class MossyPluginCore implements Plugin<Project> {
 				if (supportedVersionsString.contains("-")) {
 					String[] supportedVersions = supportedVersionsString.split("-");
 					return new MultiVersion(currentMCVersion, supportedVersions[0], supportedVersions[1]);
-				} else if (supportedVersionsString.contains(".")) {
+				} else if (supportedVersionsString.contains(".")) {;
 					return new MultiVersion(currentMCVersion, currentMCVersion, supportedVersionsString);
 				} else {
-					int a = project.indexOf(".");
-					int i = project.lastIndexOf(".");
-					if (a == i) {
-						i = project.length();
+					boolean newVersionFormat = project.charAt(0) != '1';
+
+					if (newVersionFormat) {
+						int i = project.indexOf(".");
+						String p = project.substring(0, i);
+						String supportedMaxVersion = "%s.%s".formatted(p, supportedVersionsString);
+						return new MultiVersion(currentMCVersion, currentMCVersion, supportedMaxVersion);
+					} else {
+						int a = project.indexOf(".");
+						int i = project.lastIndexOf(".");
+						if (a == i) {
+							i = project.length();
+						}
+						String p = project.substring(0, i);
+						String supportedMaxVersion = "%s.%s".formatted(p, supportedVersionsString);
+						return new MultiVersion(currentMCVersion, currentMCVersion, supportedMaxVersion);
 					}
-					String p = project.substring(0, i);
-					String supportedMaxVersion = "%s.%s".formatted(p, supportedVersionsString);
-					return new MultiVersion(currentMCVersion, currentMCVersion, supportedMaxVersion);
 				}
 			}
 		}

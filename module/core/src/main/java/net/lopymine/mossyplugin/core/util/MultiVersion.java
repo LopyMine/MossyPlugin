@@ -17,6 +17,36 @@ public record MultiVersion(String projectVersion, String minVersion, String maxV
 			return this.maxVersion();
 		}
 
+		boolean newVersionFormat = this.minVersion().charAt(0) != '1' || this.maxVersion().charAt(0) != '1';
+
+		if (newVersionFormat) {
+			int aMin = this.minVersion().indexOf(".");
+			int bMin = this.minVersion().lastIndexOf(".");
+
+			int aMax = this.maxVersion().indexOf(".");
+			int bMax = this.maxVersion().lastIndexOf(".");
+
+			if (aMin == bMin && aMax == bMax) {
+				String minMain = this.minVersion().substring(0, aMin);
+				String maxMain = this.maxVersion().substring(0, aMax);
+				String maxMinor = this.maxVersion().substring(aMax + 1);
+
+				if (minMain.equals(maxMain)) {
+					return "%s-%s".formatted(this.minVersion(), maxMinor);
+				}
+			} else if (aMin != bMin && aMax != bMax) {
+				String minMain = this.minVersion().substring(0, bMin);
+				String maxMain = this.maxVersion().substring(0, bMax);
+				String maxMinor = this.maxVersion().substring(bMax + 1);
+
+				if (minMain.equals(maxMain)) {
+					return "%s-%s".formatted(this.minVersion(), maxMinor);
+				}
+			}
+
+			return "%s-%s".formatted(this.minVersion(), this.maxVersion());
+		}
+
 		int aMin = this.minVersion().indexOf(".");
 		int bMin = this.minVersion().lastIndexOf(".");
 		if (aMin == bMin) {

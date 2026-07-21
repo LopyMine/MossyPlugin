@@ -14,14 +14,14 @@ import org.jetbrains.annotations.NotNull;
 @Getter
 public class MossyPluginSettings implements Plugin<Settings> {
 
-	public static final String PLUGIN_VERSION = "3.7.0-beta.19";
+	public static final String PLUGIN_VERSION = "3.12.0";
 
 	public static final MossyLogger LOGGER = new MossyLogger("Settings");
 
 	@Override
 	public void apply(@NotNull Settings settings) {
 		Properties gradleProperties = getGradleProperties(settings.getRootDir());
-		settings.getRootProject().setName(MossyUtils.getProperty(gradleProperties, "data.mod_name"));
+		settings.getRootProject().setName(MossyUtils.getProperty(gradleProperties, "data.mod_name").replaceAll("[/\\\\:<>\",?*|]", ""));
 		LOGGER.setup(settings.getRootProject().getName());
 		LOGGER.log("Running MossyPlugin " + PLUGIN_VERSION);
 
