@@ -10,6 +10,8 @@ import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import net.lopymine.mossyplugin.core.extension.MossyCoreDependenciesExtension;
 import net.minecraftforge.gradle.common.util.*;
 import org.gradle.api.*;
+import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.tasks.SourceSet;
 import org.jetbrains.annotations.NotNull;
 
 @ExtensionMethod(MossyPluginCore.class)
@@ -27,8 +29,9 @@ public class OldForgeManager {
 
 		MinecraftExtension forge = project.getExtensions().getByType(MinecraftExtension.class);
 
-		forge.mappings("parchment", extension.getParchment());
+		forge.mappings("parchment", "%s-%s".formatted(extension.getParchment(), data.comparableMinecraftVersion()));
 		forge.getCopyIdeResources().set(true);
+		forge.getGenerateRunFolders().set(true);
 		forge.getAccessTransformers().from("../../src/main/resources/aws/forge-%s.cfg".formatted(data.minecraftVersion()));
 
 		String sides = data.project().getProperty("data.sides").toLowerCase(Locale.ROOT);
@@ -36,6 +39,15 @@ public class OldForgeManager {
 		boolean createServer = sides.equals("server") || sides.equals("both");
 
 		NamedDomainObjectContainer<RunConfig> container = forge.getRuns();
+
+		SourceSet main = project.getExtensions().getByType(JavaPluginExtension.class).getSourceSets().getByName("main");
+		String modId = project.getProperty("data.mod_id");
+		String folderName = "%s / %s".formatted(data.loaderName(), data.minecraftVersion());
+
+		container.configureEach((run) -> {
+			run.setFolderName(folderName);
+			run.getMods().create(modId, (mod) -> mod.source(main));
+		});
 
 		Path runs = project.getRootProject().getProjectDir().toPath().resolve("runs");
 
@@ -58,11 +70,7 @@ public class OldForgeManager {
 				addProgramArg(altClient, "--username", entry.getKey());
 				addProgramArg(altClient, "--uuid", entry.getValue());
 				addProgramArg(altClient, "--quickPlaySingleplayer", quickPlayWorld);
-
-				//altClient.getIdeName().set("%s / %s / client / %s".formatted(platform, data.minecraftVersion(), entry.getKey()));
 			}
-
-			//client.getIdeName().set("%s / %s / %s".formatted(platform, data.minecraftVersion(), "client"));
 		}
 
 		if (createServer) {
@@ -70,7 +78,6 @@ public class OldForgeManager {
 			server.client(false);
 			server.arg("--nogui");
 			server.setWorkingDirectory(runs.resolve("server").toAbsolutePath().toString());
-			//server.getIdeName().set("%s / %s / %s".formatted(platform, data.minecraftVersion(), "server"));
 		}
 	}
 

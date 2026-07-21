@@ -50,6 +50,14 @@ subprojects {subProject ->
 			name = 'MinecraftForge'
 			url = 'https://maven.minecraftforge.net/'
 		}
+		maven {
+			name = 'ParchmentMC'
+			url = 'https://maven.parchmentmc.org'
+		}
+		maven {
+			name = 'Outlands'
+			url = 'https://maven.outlands.top/releases'
+		}
 		mavenLocal()
 		mavenCentral()
 		gradlePluginPortal()

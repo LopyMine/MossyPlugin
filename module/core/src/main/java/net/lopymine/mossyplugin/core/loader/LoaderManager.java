@@ -1,6 +1,7 @@
 package net.lopymine.mossyplugin.core.loader;
 
 import java.util.*;
+import net.lopymine.mossyplugin.common.MossyUtils;
 import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import net.lopymine.mossyplugin.core.extension.MossyCoreDependenciesExtension;
 import org.gradle.api.artifacts.Configuration;
@@ -9,9 +10,9 @@ import org.jetbrains.annotations.NotNull;
 
 public interface LoaderManager {
 
-	static LoaderManager of(String loader) {
+	static LoaderManager of(String loader, String minecraftVersion) {
 		if (loader.equals("forge")) {
-			return ForgeLoaderManager.getInstance();
+			return MossyUtils.isOldForgeVersion(minecraftVersion) ? OldForgeLoaderManager.getInstance() : ForgeLoaderManager.getInstance();
 		} else if (loader.contains("neoforge")) {
 			return NeoForgeLoaderManager.getInstance();
 		} else if (loader.contains("fabric")) {

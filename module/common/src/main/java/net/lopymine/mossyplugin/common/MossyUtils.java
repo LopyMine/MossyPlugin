@@ -77,6 +77,30 @@ public class MossyUtils {
 		return properties.get(id).toString();
 	}
 
+	public static boolean isOldForgeProject(String projectName) {
+		if (!substringBefore(projectName, "-").equals("forge")) {
+			return false;
+		}
+		return isOldForgeVersion(substringSince(projectName, "-"));
+	}
+
+	/**
+	 * NeoForge's ModDevGradle handles MinecraftForge down to 1.17, its runs are built on BootstrapLauncher.
+	 * 1.16.5 and older are left to MinecraftForge's own ForgeGradle: NeoForm Runtime refuses MCP versions
+	 * that predate official Mojang mappings, and those only exist since 1.17.
+	 */
+	public static boolean isOldForgeVersion(String minecraftVersion) {
+		if (!minecraftVersion.startsWith("1.")) {
+			return false;
+		}
+		String[] split = minecraftVersion.split("\\.");
+		try {
+			return Integer.parseInt(split[1]) < 17;
+		} catch (NumberFormatException e) {
+			return false;
+		}
+	}
+
 	public static String substringBeforeLast(String value, String since) {
 		int i = value.lastIndexOf(since);
 		if (i == -1) {

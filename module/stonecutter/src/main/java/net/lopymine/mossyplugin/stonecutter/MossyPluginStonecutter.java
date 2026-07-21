@@ -236,6 +236,9 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 
 			List<String> list = controller.getVersions().stream().map(StonecutterProject::getProject).toList();
 			for (String version : list) {
+				if (MossyUtils.isOldForgeProject(version)) {
+					continue;
+				}
 				if (version.contains("forge")) {
 					task.delete(childProjects.get(version).file("build/moddev"));
 				} else {
@@ -250,7 +253,9 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 			}
 
 			for (String version : list) {
-				if (version.contains("forge")) {
+				if (MossyUtils.isOldForgeProject(version)) {
+					task.finalizedBy(":%s:genIntellijRuns".formatted(version));
+				} else if (version.contains("forge")) {
 					task.finalizedBy(":%s:createLaunchScripts".formatted(version));
 				} else {
 					task.finalizedBy(":%s:ideaSyncTask".formatted(version));

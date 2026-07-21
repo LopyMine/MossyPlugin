@@ -3,7 +3,14 @@ dependencies {
 	implementation "dev.kikugie.fletching-table:dev.kikugie.fletching-table.gradle.plugin:${property("fletching_table_version")}"
 	implementation "fabric-loom:fabric-loom.gradle.plugin:${property("fabric_loom_version")}"
 	implementation "net.neoforged.moddev:net.neoforged.moddev.gradle.plugin:${property("neoforge_moddev_version")}"
-	implementation "net.minecraftforge.gradle:net.minecraftforge.gradle.gradle.plugin:${property("forge_moddev_version")}"
+	implementation("net.minecraftforge.gradle:net.minecraftforge.gradle.gradle.plugin:${property("forge_moddev_version")}") {
+		exclude group: "net.minecraftforge", module: "artifactural"
+	}
+	// ForgeGradle strips every transitive of artifactural and unsafe, the fork does not, and unsafe drags in log4j 2.11.+
+	implementation("top.outlands:artifactural:${property("artifactural_version")}") {
+		transitive = false
+	}
+	implementation "org.parchmentmc.librarian.forgegradle:org.parchmentmc.librarian.forgegradle.gradle.plugin:${property("librarian_version")}"
 	implementation "org.spongepowered:mixingradle:${property("mixin_version")}"
 }
 
