@@ -21,7 +21,6 @@ public class ModPublishManager {
 	public static void apply(@NotNull MossyProjectConfigurationData data, ModPublishExtension mpe) {
 		MossyPluginCore plugin = data.plugin();
 		String loaderName = data.loaderName();
-		LoaderManager loaderManager = data.loaderManager();
 		Project project = data.project();
 
 		MultiVersion projectMultiVersion = plugin.getProjectMultiVersion();

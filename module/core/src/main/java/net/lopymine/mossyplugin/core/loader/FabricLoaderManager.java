@@ -44,7 +44,7 @@ public class FabricLoaderManager implements LoaderManager {
 		DependencyHandler dependencies = project.getDependencies();
 		dependencies.add("minecraft", "com.mojang:minecraft:%s".formatted(minecraft));
 
-		if (isRemapVersion(data)) {
+		if (isRemapVersion(data) && !project.getProperties().containsKey("debug.no_mappings")) {
 			dependencies.add("mappings", ((LoomGradleExtensionAPI) project.getExtensions().getByName("loom")).officialMojangMappings());
 		}
 

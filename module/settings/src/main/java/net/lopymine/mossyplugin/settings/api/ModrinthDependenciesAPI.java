@@ -4,10 +4,13 @@ import com.google.gson.*;
 import java.io.FileNotFoundException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import net.lopymine.mossyplugin.settings.MossyPluginSettings;
 import org.jetbrains.annotations.NotNull;
 
 public class ModrinthDependenciesAPI {
+
+	private static final List<String> FILTER = List.of("modmenu", "yacl");
 
 	@NotNull
 	public static String getVersion(String modId, String minecraftVersion, String loader) {
@@ -34,9 +37,16 @@ public class ModrinthDependenciesAPI {
 		JsonObject jsonObject = jsonElement.getAsJsonObject();
 
 		String versionNumber = jsonObject.get("version_number").getAsString();
-
-		if (versionNumber.contains(minecraftVersion)) {
+		if (FILTER.contains(modId)) {
 			return versionNumber;
+		}
+
+		JsonArray gameVersions = jsonObject.get("game_versions").getAsJsonArray();
+		for (JsonElement gameVersion : gameVersions) {
+			String version = gameVersion.getAsString();
+			if (versionNumber.contains(version)) {
+				return versionNumber;
+			}
 		}
 
 		return jsonObject.get("id").getAsString();
