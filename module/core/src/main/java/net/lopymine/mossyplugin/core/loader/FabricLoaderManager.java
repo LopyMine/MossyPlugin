@@ -85,7 +85,7 @@ public class FabricLoaderManager implements LoaderManager {
 	}
 
 	@Override
-	public boolean excludeUselessFiles(FileCopyDetails details) {
+	public boolean excludeUselessFiles(MossyProjectConfigurationData data, FileCopyDetails details) {
 		if (details.getName().contains("mods.toml")) {
 			details.exclude();
 			return true;

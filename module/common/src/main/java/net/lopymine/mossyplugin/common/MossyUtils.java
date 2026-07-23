@@ -77,6 +77,25 @@ public class MossyUtils {
 		return properties.get(id).toString();
 	}
 
+	public static boolean isOldNeoForgeProject(String projectName) {
+		if (!substringBefore(projectName, "-").equals("neoforge")) {
+			return false;
+		}
+		return isOldNeoForgeVersion(substringSince(projectName, "-"));
+	}
+
+	public static boolean isOldNeoForgeVersion(String minecraftVersion) {
+		if (!minecraftVersion.startsWith("1.")) {
+			return false;
+		}
+		String[] split = minecraftVersion.split("\\.");
+		try {
+			return Integer.parseInt(split[1]) < 21;
+		} catch (NumberFormatException e) {
+			return false;
+		}
+	}
+
 	public static String substringBeforeLast(String value, String since) {
 		int i = value.lastIndexOf(since);
 		if (i == -1) {

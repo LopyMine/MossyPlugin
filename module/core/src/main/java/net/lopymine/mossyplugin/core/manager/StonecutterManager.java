@@ -52,12 +52,10 @@ public class StonecutterManager {
 				spec.getDirection().set(stonecutter.getCurrent().getProject().contains("forge"));
 				spec.getId().set("client_fabric_commands");
 
-				String string = stonecutter.getCurrent().getParsed().matches("<1.19") ?
-						"import net.fabricmc.fabric.api.client.command.v1.FabricClientCommandSource;"
-						:
-						"import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;";
-
-				spec.replace(string, "import net.minecraft.commands.CommandSourceStack;");
+				boolean bl = !project.getProperties().containsKey("special.no_command_replacements");
+				if (bl) {
+					spec.replace("import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;", "import net.minecraft.commands.CommandSourceStack;");
+				}
 				spec.replace("FabricClientCommandSource", "CommandSourceStack");
 			});
 		});

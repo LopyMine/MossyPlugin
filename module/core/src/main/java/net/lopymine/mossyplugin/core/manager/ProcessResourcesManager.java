@@ -8,7 +8,6 @@ import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import net.lopymine.mossyplugin.core.extension.MossyCoreProcessResourcesExtension;
 import org.gradle.api.*;
 import org.gradle.api.file.RelativePath;
-import org.gradle.api.internal.TaskInputsInternal;
 import org.gradle.language.jvm.tasks.ProcessResources;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,9 +35,6 @@ public class ProcessResourcesManager {
 	private static void processResources(@NotNull MossyProjectConfigurationData data, MossyCoreProcessResourcesExtension extension) {
 		Project project = data.project();
 		MossyPluginCore plugin = data.plugin();
-
-		ProcessResources processResources = (ProcessResources) project.getTasks().getByName("processResources");
-		TaskInputsInternal inputs = processResources.getInputs();
 
 		String mcVersion = plugin.getProjectMultiVersion().projectVersion();
 		String modId = project.getProperty("data.mod_id");
@@ -73,36 +69,38 @@ public class ProcessResourcesManager {
 		properties.put("neoforge_trick_side", project.getProperty("data.sides").toUpperCase(Locale.ROOT));
 		properties.put("fabric_trick_accesswidener_id", "aws/%s.%s".formatted(data.projectName(), data.loaderManager().getAWFileExtension(data)));
 
-		properties.forEach(inputs::property);
-
 		List<String> patterns = new ArrayList<>(List.of("*.json5", "META-INF/*.toml", "pack.mcmeta", "*.json", "assets/%s/lang/*.json".formatted(modId)));
 		List<String> expandFiles = extension.getExpandFiles();
 		if (expandFiles != null) {
 			patterns.addAll(expandFiles);
 		}
 
-		processResources.filesMatching(patterns, (details) -> {
-			if (data.loaderManager().excludeUselessFiles(details)) {
-				return;
-			}
-			details.expand(properties);
-		});
-
 		String e = data.loaderManager().getAWFileExtension(data);
-		processResources.filesMatching("aws/*.*", (details) -> {
-			if (!details.getName().equals("%s.%s".formatted(project.getName(), e))) {
-				details.exclude();
-			} else {
-				if (data.loaderName().contains("forge")) {
-					String[] segments = details.getRelativePath().getSegments();
-					String[] strings = Arrays.copyOf(segments, segments.length);
-					strings[strings.length-1] = "accesstransformer.cfg";
-					strings[strings.length-2] = "META-INF";
-					RelativePath path = new RelativePath(true, strings);
-					details.setRelativePath(path);
-				}
-			}
-		});
 
+		project.getTasks().named("processResources", ProcessResources.class).configure((processResources) -> {
+			properties.forEach(processResources.getInputs()::property);
+
+			processResources.filesMatching(patterns, (details) -> {
+				if (data.loaderManager().excludeUselessFiles(data, details)) {
+					return;
+				}
+				details.expand(properties);
+			});
+
+			processResources.filesMatching("aws/*.*", (details) -> {
+				if (!details.getName().equals("%s.%s".formatted(project.getName(), e))) {
+					details.exclude();
+				} else {
+					if (data.loaderName().contains("forge")) {
+						String[] segments = details.getRelativePath().getSegments();
+						String[] strings = Arrays.copyOf(segments, segments.length);
+						strings[strings.length-1] = "accesstransformer.cfg";
+						strings[strings.length-2] = "META-INF";
+						RelativePath path = new RelativePath(true, strings);
+						details.setRelativePath(path);
+					}
+				}
+			});
+		});
 	}
 }

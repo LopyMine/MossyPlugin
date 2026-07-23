@@ -84,17 +84,18 @@ public class ForgeLoaderManager implements LoaderManager {
 		}
 
 		String mixinConfigs = String.join(",", registeredMixinConfigs);
-		Jar jar = (Jar) project.getTasks().getByName("jar");
-		jar.getManifest().getAttributes().put("MixinConfigs", mixinConfigs);
+		project.getTasks().named("jar", Jar.class).configure((jar) -> {
+			jar.getManifest().getAttributes().put("MixinConfigs", mixinConfigs);
+		});
 	}
 
 	@Override
 	public void configureExtensions(@NotNull MossyProjectConfigurationData data) {
-		data.project().getTasks().getByName("jar").finalizedBy(this.getJarTaskName(data));
-		for (JavaCompile compile : data.project().getTasks().withType(JavaCompile.class)) {
+		data.project().getTasks().named("jar").configure((jar) -> jar.finalizedBy(this.getJarTaskName(data)));
+		data.project().getTasks().withType(JavaCompile.class).configureEach((compile) -> {
 			compile.getOptions().getCompilerArgs().add("-Xlint:-removal");
 			compile.getOptions().getCompilerArgs().add("-Xlint:-deprecation");
-		}
+		});
 
 		data.project().afterEvaluate((project) -> {
 			project.getTasks().named("createMinecraftArtifacts").configure((task) -> {
@@ -119,7 +120,7 @@ public class ForgeLoaderManager implements LoaderManager {
 	}
 
 	@Override
-	public boolean excludeUselessFiles(FileCopyDetails details) {
+	public boolean excludeUselessFiles(MossyProjectConfigurationData data, FileCopyDetails details) {
 		boolean excluded = false;
 		for (String file : List.of("fabric.mod.json", "neoforge.mods.toml")) {
 			if (details.getName().equals(file)) {

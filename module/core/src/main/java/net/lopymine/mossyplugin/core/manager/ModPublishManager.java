@@ -120,7 +120,7 @@ public class ModPublishManager {
 	}
 
 	private static Provider<RegularFile> getModFile(MossyProjectConfigurationData data) {
-		return ((Jar) data.project().getTasks().getByName(data.loaderManager().getJarTaskName(data))).getArchiveFile();
+		return data.project().getTasks().named(data.loaderManager().getJarTaskName(data), Jar.class).flatMap(Jar::getArchiveFile);
 	}
 
 	private static ReleaseType getType(String versionType) {

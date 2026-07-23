@@ -8,6 +8,7 @@ import net.lopymine.mossyplugin.common.MossyUtils;
 import net.lopymine.mossyplugin.core.MossyPluginCore;
 import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import net.lopymine.mossyplugin.core.extension.MossyCoreDependenciesExtension;
+import net.lopymine.mossyplugin.core.util.TestRuns;
 import net.neoforged.moddevgradle.dsl.*;
 import org.gradle.api.*;
 import org.gradle.api.plugins.JavaPluginExtension;
@@ -72,6 +73,38 @@ public class NeoForgeManager {
 				server.programArgument("--nogui");
 				server.getGameDirectory().set(runs.resolve("server").toFile());
 				server.getIdeName().set("%s / %s / %s".formatted(platform, data.minecraftVersion(), "server"));
+			}
+
+			if (!TestRuns.isEnabled(project)) {
+				return;
+			}
+
+			if (createClient) {
+				RunModel clientTest = container.create("clientTest");
+				clientTest.client();
+				clientTest.getGameDirectory().set(TestRuns.getRunDirectory(project, "client"));
+				addProgramArg(clientTest, "--username", playerNickname);
+				addProgramArg(clientTest, "--uuid", playerUuid);
+				addProgramArg(clientTest, "--quickPlaySingleplayer", quickPlayWorld);
+				clientTest.getIdeName().set("%s / %s / test / client".formatted(platform, data.minecraftVersion()));
+
+				for (Entry<String, UUID> entry : altAccounts.entrySet()) {
+					RunModel altClientTest = container.create("clientTest_%s".formatted(entry.getKey()));
+					altClientTest.client();
+					altClientTest.getGameDirectory().set(TestRuns.getRunDirectory(project, "client_%s".formatted(entry.getKey())));
+					addProgramArg(altClientTest, "--username", entry.getKey());
+					addProgramArg(altClientTest, "--uuid", entry.getValue());
+					addProgramArg(altClientTest, "--quickPlaySingleplayer", quickPlayWorld);
+					altClientTest.getIdeName().set("%s / %s / test / client / %s".formatted(platform, data.minecraftVersion(), entry.getKey()));
+				}
+			}
+
+			if (createServer) {
+				RunModel serverTest = container.create("serverTest");
+				serverTest.server();
+				serverTest.programArgument("--nogui");
+				serverTest.getGameDirectory().set(TestRuns.getRunDirectory(project, "server"));
+				serverTest.getIdeName().set("%s / %s / test / server".formatted(platform, data.minecraftVersion()));
 			}
 		});
 

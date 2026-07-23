@@ -8,11 +8,7 @@ import java.util.*;
 import lombok.experimental.ExtensionMethod;
 import net.lopymine.mossyplugin.common.MossyUtils;
 import net.lopymine.mossyplugin.stonecutter.tasks.*;
-import org.gradle.*;
 import org.gradle.api.*;
-import org.gradle.api.artifacts.dsl.RepositoryHandler;
-import org.gradle.api.initialization.Settings;
-import org.gradle.api.invocation.Gradle;
 import org.gradle.api.publish.PublishingExtension;
 import org.gradle.api.tasks.*;
 import org.jetbrains.annotations.NotNull;
@@ -151,76 +147,30 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 			task.setGroup("aa-mossy-main");
 		});
 
-		project.getGradle().addBuildListener(new BuildListener() {
-			@Override
-			public void settingsEvaluated(@NotNull Settings settings) {
-
+		tasks.configureEach((task) -> {
+			if (!"stonecutter".equals(task.getGroup())) {
+				return;
 			}
+			task.setGroup("aa-mossy-stonecutter");
+		});
 
-			@Override
-			public void projectsLoaded(@NotNull Gradle gradle) {
+		Set<String> seenRepoAll = new HashSet<>();
+		Set<String> seenLoaderAll = new HashSet<>();
+		boolean[] seenAll = {false};
 
-			}
-
-			@Override
-			public void projectsEvaluated(@NotNull Gradle gradle) {
-				for (Task task : tasks) {
-					if (!"stonecutter".equals(task.getGroup())) {
-						continue;
+		loaderAndProjects.forEach((loader, projects) -> {
+			projects.forEach((version) -> {
+				Project child = childProjects.get(version.getProject());
+				child.getPluginManager().withPlugin("maven-publish", (applied) -> child.afterEvaluate((cp) -> {
+					PublishingExtension publishing = cp.getExtensions().findByType(PublishingExtension.class);
+					if (publishing == null) {
+						return;
 					}
-					task.setGroup("aa-mossy-stonecutter");
-				}
-
-				Map<String, Map<String, List<StonecutterProject>>> loaderAndTheRepoAndProject = new HashMap<>();
-
-				loaderAndProjects.forEach((loader, projects) -> {
-					Map<String, List<StonecutterProject>> repoAndProjects = new HashMap<>();
-
-					projects.forEach((pr) -> {
-						RepositoryHandler repositories = childProjects.get(pr.getProject()).getExtensions().getByType(PublishingExtension.class).getRepositories();
-						for (String repository : repositories.getNames()) {
-							List<StonecutterProject> list = repoAndProjects.computeIfAbsent(repository, (key) -> new ArrayList<>());
-							list.add(pr);
-						}
-					});
-
-					loaderAndTheRepoAndProject.put(loader, repoAndProjects);
-				});
-
-				List<TaskProvider<?>> list = new ArrayList<>();
-				loaderAndTheRepoAndProject.forEach((loader, repoAndProjects) -> {
-					repoAndProjects.forEach((repository, projects) -> {
-						tasks.register("publishMaven+%s+%s+All".formatted(loader, repository), (task) -> {
-							configurePublishAllTaskWithRightOrder(projects, List.of("publishMossyPluginPublicationTo%sRepository".formatted(repository)), task, controller, childProjects);
-							task.setGroup("ad-mossy-maven-%s".formatted(loader));
-						});
-					});
-
-					if (!repoAndProjects.isEmpty()) {
-						TaskProvider<Task> registered = tasks.register("publishMaven+%s+All".formatted(loader), (task) -> {
-							for (String repository : repoAndProjects.keySet()) {
-								task.dependsOn("publishMaven+%s+%s+All".formatted(loader, repository));
-							}
-							task.setGroup("ad-mossy-maven-%s".formatted(loader));
-						});
-						list.add(registered);
+					for (String repository : publishing.getRepositories().getNames()) {
+						registerPublishMavenTasks(tasks, loader, repository, projects, controller, childProjects, seenRepoAll, seenLoaderAll, seenAll);
 					}
-				});
-
-				if (!list.isEmpty()) {
-					tasks.register("publishMaven+All", (task) -> {
-						for (TaskProvider<?> taskProvider : list) {
-							task.dependsOn(taskProvider);
-						}
-						task.setGroup("aa-mossy-main");
-					});
-				}
-			}
-
-			@Override
-			public void buildFinished(@NotNull BuildResult result) {
-
-			}
+				}));
+			});
 		});
 
 		project.getTasks().register("generatePublishWorkflowsForEachVersion", GeneratePublishWorkflowsForEachVersionTask.class, (task) -> {
@@ -236,6 +186,9 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 
 			List<String> list = controller.getVersions().stream().map(StonecutterProject::getProject).toList();
 			for (String version : list) {
+				if (MossyUtils.isOldNeoForgeProject(version)) {
+					continue;
+				}
 				if (version.contains("forge")) {
 					task.delete(childProjects.get(version).file("build/moddev"));
 				} else {
@@ -250,13 +203,50 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 			}
 
 			for (String version : list) {
-				if (version.contains("forge")) {
+				if (MossyUtils.isOldNeoForgeProject(version)) {
+					task.finalizedBy(":%s:idePostSync".formatted(version));
+				} else if (version.contains("forge")) {
 					task.finalizedBy(":%s:createLaunchScripts".formatted(version));
 				} else {
 					task.finalizedBy(":%s:ideaSyncTask".formatted(version));
 				}
 			}
 		});
+	}
+
+	private static void registerPublishMavenTasks(
+			TaskContainer tasks,
+			String loader,
+			String repository,
+			List<StonecutterProject> projects,
+			StonecutterControllerExtension controller,
+			Map<String, Project> childProjects,
+			Set<String> seenRepoAll,
+			Set<String> seenLoaderAll,
+			boolean[] seenAll
+	) {
+		if (!seenRepoAll.add("%s+%s".formatted(loader, repository))) {
+			return;
+		}
+
+		String repoAll = "publishMaven+%s+%s+All".formatted(loader, repository);
+		tasks.register(repoAll, (task) -> {
+			configurePublishAllTaskWithRightOrder(projects, List.of("publishMossyPluginPublicationTo%sRepository".formatted(repository)), task, controller, childProjects);
+			task.setGroup("ad-mossy-maven-%s".formatted(loader));
+		});
+
+		String loaderAll = "publishMaven+%s+All".formatted(loader);
+		if (seenLoaderAll.add(loader)) {
+			tasks.register(loaderAll, (task) -> task.setGroup("ad-mossy-maven-%s".formatted(loader)));
+
+			if (!seenAll[0]) {
+				seenAll[0] = true;
+				tasks.register("publishMaven+All", (task) -> task.setGroup("aa-mossy-main"));
+			}
+			tasks.named("publishMaven+All").configure((task) -> task.dependsOn(loaderAll));
+		}
+
+		tasks.named(loaderAll).configure((task) -> task.dependsOn(repoAll));
 	}
 
 	private static void configurePublishAllTaskWithRightOrder(List<StonecutterProject> projects, List<String> publishTasks, Task task, StonecutterControllerExtension controller, Map<String, Project> childProjects) {
@@ -268,22 +258,26 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 							.sorted((a, b) -> controller.compare(a.getVersion(), b.getVersion()))
 							.toList();
 
+		// task paths keep this lazy, resolving them through another project's task container would realize it
 		for (String publishTask : publishTasks) {
 			if (versions.size() == 1) {
-				task.dependsOn(childProjects.get(versions.get(0).getProject()).getTasks().named(publishTask));
+				task.dependsOn(getTaskPath(versions.get(0), publishTask));
 				continue;
 			}
 			for (int i = 1; i < versions.size(); i++) {
-				StonecutterProject first = versions.get(i - 1);
 				StonecutterProject second = versions.get(i);
 
-				TaskProvider<Task> firstTask = childProjects.get(first.getProject()).getTasks().named(publishTask);
-				TaskProvider<Task> secondTask = childProjects.get(second.getProject()).getTasks().named(publishTask);
-				task.dependsOn(firstTask, secondTask);
+				String firstPath = getTaskPath(versions.get(i - 1), publishTask);
+				String secondPath = getTaskPath(second, publishTask);
+				task.dependsOn(firstPath, secondPath);
 
-				secondTask.configure((t) -> t.setMustRunAfter(List.of(firstTask)));
+				childProjects.get(second.getProject()).getTasks().named(publishTask).configure((t) -> t.mustRunAfter(firstPath));
 			}
 		}
+	}
+
+	private static @NotNull String getTaskPath(@NotNull StonecutterProject project, String taskName) {
+		return ":%s:%s".formatted(project.getProject(), taskName);
 	}
 
 	public static List<String> getVersionsSpecifications(@NotNull Project project, String loader) {

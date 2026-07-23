@@ -91,7 +91,7 @@ public class DependenciesManager {
 			AdditionalDependencyOverride override = overrides.get("yacl");
 			String configurationName = override != null ? override.configurationName() : modImplementation;
 			if (oldMavenVersions.contains(minecraft)) {
-				dependencies.add(configurationName, "dev.isxander.yacl:yet-another-config-lib-fabric:%s".formatted(MossyUtils.substringBeforeLast(yaclVersion, "-")));
+				dependencies.add(configurationName, "dev.isxander.yacl:yet-another-config-lib-%s:%s".formatted(data.loaderName().toLowerCase(Locale.ROOT), MossyUtils.substringBeforeLast(yaclVersion, "-")));
 			} else {
 				dependencies.add(configurationName, "dev.isxander:yet-another-config-lib:%s".formatted(yaclVersion));
 			}

@@ -1,6 +1,7 @@
 package net.lopymine.mossyplugin.core.loader;
 
 import java.util.*;
+import net.lopymine.mossyplugin.common.MossyUtils;
 import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import net.lopymine.mossyplugin.core.extension.MossyCoreDependenciesExtension;
 import org.gradle.api.artifacts.Configuration;
@@ -9,11 +10,11 @@ import org.jetbrains.annotations.NotNull;
 
 public interface LoaderManager {
 
-	static LoaderManager of(String loader) {
+	static LoaderManager of(String loader, String minecraftVersion) {
 		if (loader.equals("forge")) {
 			return ForgeLoaderManager.getInstance();
 		} else if (loader.contains("neoforge")) {
-			return NeoForgeLoaderManager.getInstance();
+			return MossyUtils.isOldNeoForgeVersion(minecraftVersion) ? OldNeoForgeLoaderManager.getInstance() : NeoForgeLoaderManager.getInstance();
 		} else if (loader.contains("fabric")) {
 			return FabricLoaderManager.getInstance();
 		} else {
@@ -27,7 +28,7 @@ public interface LoaderManager {
 
 	void configureExtensions(@NotNull MossyProjectConfigurationData data);
 
-	boolean excludeUselessFiles(FileCopyDetails details);
+	boolean excludeUselessFiles(MossyProjectConfigurationData data, FileCopyDetails details);
 
 	String getModDependenciesImplementationMethod(MossyProjectConfigurationData data);
 

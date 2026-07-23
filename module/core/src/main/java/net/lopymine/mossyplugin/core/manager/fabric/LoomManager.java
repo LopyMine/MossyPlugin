@@ -10,6 +10,7 @@ import net.fabricmc.loom.configuration.ide.RunConfigSettings;
 import net.lopymine.mossyplugin.common.MossyUtils;
 import net.lopymine.mossyplugin.core.MossyPluginCore;
 import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
+import net.lopymine.mossyplugin.core.util.TestRuns;
 import org.gradle.api.*;
 import org.jetbrains.annotations.*;
 
@@ -64,13 +65,12 @@ public class LoomManager {
 		}
 
 		RunConfigSettings client = runConfigs.getByName("client");
-		Path runs = project.getRootProject().getProjectDir().toPath().resolve("runs");
 
 		for (Entry<String, UUID> entry : altAccounts.entrySet()) {
 			RunConfigSettings altClient = runConfigs.create("fabric-%s-client-%s".formatted(data.minecraftVersion(), entry.getKey()));
 			altClient.inherit(client);
 
-			altClient.setRunDir(runs.resolve("client_" + entry.getKey()).toAbsolutePath().toString());
+			altClient.setRunDir("../../runs/" + "client_" + entry.getKey());
 			addProgramArg(altClient, "--username", entry.getKey());
 			addProgramArg(altClient, "--uuid", entry.getValue());
 			addProgramArg(altClient, "--quickPlaySingleplayer", quickPlayWorld);
@@ -79,6 +79,42 @@ public class LoomManager {
 			altClient.setName("fabric / %s / client / %s".formatted(data.minecraftVersion(), entry.getKey()));
 			altClient.getAppendProjectPathToConfigName().set(false);
 		}
+
+		if (!TestRuns.isEnabled(project)) {
+			return;
+		}
+
+		if (createClient) {
+			RunConfigSettings clientTest = runConfigs.create("clientTest");
+			clientTest.inherit(client);
+			clientTest.setRunDir(TestRuns.getRelativeRunDirectory(project, "client"));
+			configureTestRun(clientTest, "fabric / %s / test / client".formatted(data.minecraftVersion()));
+
+			for (Entry<String, UUID> entry : altAccounts.entrySet()) {
+				RunConfigSettings altClientTest = runConfigs.create("clientTest_%s".formatted(entry.getKey()));
+				altClientTest.inherit(client);
+				altClientTest.setRunDir(TestRuns.getRelativeRunDirectory(project, "client_%s".formatted(entry.getKey())));
+
+				addProgramArg(altClientTest, "--username", entry.getKey());
+				addProgramArg(altClientTest, "--uuid", entry.getValue());
+				addProgramArg(altClientTest, "--quickPlaySingleplayer", quickPlayWorld);
+
+				configureTestRun(altClientTest, "fabric / %s / test / client / %s".formatted(data.minecraftVersion(), entry.getKey()));
+			}
+		}
+
+		if (createServer) {
+			RunConfigSettings serverTest = runConfigs.create("serverTest");
+			serverTest.inherit(runConfigs.getByName("server"));
+			serverTest.setRunDir(TestRuns.getRelativeRunDirectory(project, "server"));
+			configureTestRun(serverTest, "fabric / %s / test / server".formatted(data.minecraftVersion()));
+		}
+	}
+
+	private static void configureTestRun(@NotNull RunConfigSettings settings, String name) {
+		settings.getAppendProjectPathToConfigName().set(false);
+		settings.setName(name);
+		settings.setIdeConfigGenerated(false);
 	}
 
 	@SuppressWarnings("all")

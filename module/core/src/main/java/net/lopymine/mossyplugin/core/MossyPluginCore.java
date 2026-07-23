@@ -124,7 +124,7 @@ public class MossyPluginCore implements Plugin<Project> {
 			project.getTasks().register("buildAndCollect", Copy.class, task -> {
 				task.setGroup("build");
 				task.dependsOn("rebuildLibs", "build");
-				task.from(((Jar) project.getTasks().getByName(loaderManager.getJarTaskName(data))).getArchiveFile().get());
+				task.from(project.getTasks().named(loaderManager.getJarTaskName(data), Jar.class).flatMap(Jar::getArchiveFile));
 				task.into(getRootFile(project, "libs/"));
 			});
 
@@ -172,10 +172,11 @@ public class MossyPluginCore implements Plugin<Project> {
 		).replaceAll("[/\\\\:<>\",?*|]", "");
 		base.getArchivesName().set(modName);
 
-		Jar jar = (Jar) project.getTasks().getByName("jar");
-		jar.getArchiveBaseName().set(base.getArchivesName().get());
-		jar.from(getRootFile(project, "LICENSE"), (spec) -> {
-			spec.rename(s -> "%s_%s".formatted(s, base.getArchivesName().get()));
+		project.getTasks().named("jar", Jar.class).configure((jar) -> {
+			jar.getArchiveBaseName().set(base.getArchivesName());
+			jar.from(getRootFile(project, "LICENSE"), (spec) -> {
+				spec.rename(s -> "%s_%s".formatted(s, base.getArchivesName().get()));
+			});
 		});
 	}
 
