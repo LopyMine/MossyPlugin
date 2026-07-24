@@ -9,8 +9,10 @@ import net.lopymine.mossyplugin.core.MossyPluginCore;
 import net.lopymine.mossyplugin.core.util.*;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.work.DisableCachingByDefault;
 
 @Setter
+@DisableCachingByDefault
 public class DownloadTestAssets extends DefaultTask {
 
 	private String loader;
