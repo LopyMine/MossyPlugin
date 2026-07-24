@@ -4,7 +4,9 @@ import java.io.File;
 import java.nio.file.Files;
 import org.gradle.api.*;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.work.DisableCachingByDefault;
 
+@DisableCachingByDefault
 public class GeneratePersonalPropertiesTask extends DefaultTask {
 
 	@TaskAction

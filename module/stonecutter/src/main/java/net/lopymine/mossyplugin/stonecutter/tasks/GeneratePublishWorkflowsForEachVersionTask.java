@@ -6,9 +6,11 @@ import java.util.List;
 import lombok.*;
 import org.gradle.api.*;
 import org.gradle.api.tasks.*;
+import org.gradle.work.DisableCachingByDefault;
 
 @Setter
 @Getter
+@DisableCachingByDefault
 public class GeneratePublishWorkflowsForEachVersionTask extends DefaultTask {
 
 	@Input
