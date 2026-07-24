@@ -212,6 +212,13 @@ public class MossyPluginStonecutter implements Plugin<Project> {
 				}
 			}
 		});
+
+		project.getTasks().register("cleanTestAssets", Delete.class, (task) -> {
+			task.setGroup("aa-mossy-project");
+			for (StonecutterProject version : controller.getVersions()) {
+				task.delete(childProjects.get(version.getProject()).file("tests"));
+			}
+		});
 	}
 
 	private static void registerPublishMavenTasks(

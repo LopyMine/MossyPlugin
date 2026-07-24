@@ -12,6 +12,7 @@ import net.lopymine.mossyplugin.common.*;
 import net.lopymine.mossyplugin.core.data.MossyProjectConfigurationData;
 import net.lopymine.mossyplugin.core.loader.*;
 import net.lopymine.mossyplugin.core.manager.*;
+import net.lopymine.mossyplugin.core.task.DownloadTestAssets;
 import net.lopymine.mossyplugin.core.util.MultiVersion;
 import org.gradle.api.*;
 import org.gradle.api.artifacts.dsl.RepositoryHandler;
@@ -119,6 +120,13 @@ public class MossyPluginCore implements Plugin<Project> {
 		});
 		project.getTasks().named("build", task -> {
 			task.mustRunAfter("rebuildLibs");
+		});
+		project.getTasks().register("downloadTestAssets", DownloadTestAssets.class, task -> {
+			task.setGroup("aa-mossy-project");
+			task.setLoader(data.loaderName());
+			task.setMinecraftVersion(data.comparableMinecraftVersion());
+			task.setTests(MossyPluginCore.getMossyProperties(project, "test"));
+			task.setTestsDirectory(project.file("tests"));
 		});
 		project.afterEvaluate((p) -> {
 			project.getTasks().register("buildAndCollect", Copy.class, task -> {
